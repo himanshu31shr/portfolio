@@ -17,7 +17,7 @@ Personal portfolio + blog for **Himanshu Shrivastava**, Senior Full Stack Engine
 
 | Layer | Technology |
 |:------|:-----------|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Language | TypeScript (strict mode) |
 | Styling | Tailwind CSS v4 (CSS-first `@theme` config) |
 | Animation | Framer Motion |

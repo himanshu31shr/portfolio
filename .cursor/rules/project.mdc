@@ -6,7 +6,7 @@ alwaysApply: true
 # Portfolio: Personal Website for Himanshu Shrivastava
 
 ## Stack
-- **Framework**: Next.js 15 (App Router, `output: 'export'` — static only)
+- **Framework**: Next.js 16 (App Router, `output: 'export'` — static only)
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS v4 (CSS-first `@theme` config in `app/globals.css`)
 - **Animation**: Framer Motion
