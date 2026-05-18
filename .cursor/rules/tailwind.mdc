@@ -1,0 +1,76 @@
+---
+description: "Tailwind CSS v4 design system — token usage, utility classes, and styling conventions"
+globs: ["**/*.tsx", "**/*.css", "app/globals.css"]
+alwaysApply: false
+---
+
+# Tailwind CSS v4 Design System
+
+## How Tailwind v4 Works Here
+- Config is CSS-first — defined in `app/globals.css` via `@theme {}`
+- No `tailwind.config.js` file
+- Import: `@import "tailwindcss";` at top of globals.css
+- Custom token classes are auto-generated from `@theme` variables
+
+## Color Token Reference
+
+| Class | Color | Use |
+|:------|:------|:----|
+| `bg-bg-primary` | #0a0a0f | Page background |
+| `bg-bg-secondary` | #12121a | Slightly lighter surface |
+| `bg-bg-tertiary` | #1a1a27 | Cards, panels |
+| `bg-glass` | rgba(255,255,255,0.06) | Glass card base |
+| `border-glass-border` | rgba(255,255,255,0.1) | Glass borders |
+| `text-text-primary` | #f0f0f5 | Main text |
+| `text-text-secondary` | #a0a0b0 | Muted/caption text |
+| `text-accent-blue` | #6366f1 | Primary accent |
+| `text-accent-purple` | #8b5cf6 | Secondary accent |
+| `text-accent-pink` | #ec4899 | Tertiary accent |
+| `text-accent-cyan` | #22d3ee | Highlight |
+
+## Custom Utility Classes (defined in @layer components)
+```
+.glass          → frosted glass card (bg + backdrop-blur + border + radius)
+.glass-lg       → larger border-radius glass variant
+.gradient-text  → blue→purple→pink gradient text via bg-clip
+.btn-gradient   → gradient-filled button
+.btn-outline    → outlined ghost button
+.section        → section wrapper (max-w-1200 + padding)
+.tag            → skill pill (monospace, indigo tint)
+.glow-blue      → box-shadow glow
+.glow-purple    → box-shadow glow
+.cursor-blink   → blinking cursor animation
+```
+
+## Animation Keyframes Available
+- `float` / `float-reverse` / `float-slow` — for background orbs
+- `gradient-shift` — for animated gradients
+- `pulse-glow` — subtle opacity pulse
+- `fade-in-up` — entrance animation
+
+## Usage Examples
+```tsx
+// Glass card
+<div className="glass p-6 hover:border-glass-border-hover transition-colors">
+
+// Gradient heading
+<h2 className="gradient-text text-4xl font-bold">
+
+// Section wrapper
+<section id="about" className="section">
+
+// Skill tag
+<span className="tag">TypeScript</span>
+
+// Gradient button
+<button className="btn-gradient">View Work</button>
+
+// Responsive grid
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+```
+
+## Do NOT
+- Use `style={{}}` inline styles
+- Use arbitrary values when a token exists (e.g., don't use `bg-[#0a0a0f]`, use `bg-bg-primary`)
+- Add custom CSS outside of `app/globals.css`
+- Use `!important` overrides

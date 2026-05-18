@@ -1,0 +1,122 @@
+---
+title: "From 400K Users to 99.9% Uptime: Lessons from Scaling a Fintech Microservices Platform"
+date: "2024-08-15"
+excerpt: "How we migrated ByajBook from a fragile monolith to a distributed microservices architecture on AWS ECS — cutting infra costs by 35% while keeping the lights on for 400K users."
+tags: ["architecture", "microservices", "aws", "fintech"]
+readTime: "12 min read"
+coverImage: "/images/blog/scaling-fintech-microservices.png"
+published: true
+---
+
+When I co-founded ByajBook in 2021, we had a simple premise: **peer-to-peer lending should be as easy as sending a WhatsApp message**. What we didn't anticipate was that our simple MVP would need to scale to 400K+ users within two years — while simultaneously migrating away from the monolith that got us there.
+
+This is the story of how we did it without a single night of downtime.
+
+---
+
+## The Problem: A Monolith at Its Limits
+
+Our first version was a classic Node.js + PostgreSQL monolith. It worked beautifully for the first 10K users. By 50K, we started seeing cracks:
+
+- Deployment windows of 2+ hours (which meant 2 hours of partial downtime)
+- A single slow database query could block the entire application
+- Horizontal scaling meant duplicating *everything*, including the parts that didn't need scaling
+- Our on-call rotation was a nightmare — every alert was potentially catastrophic
+
+```
+# Our original architecture (simplified):
+┌─────────────────────────────────────────┐
+│           Monolithic Node.js App         │
+│                                          │
+│  Auth │ Loans │ Payments │ Notifications │
+│                                          │
+└─────────────────┬────────────────────────┘
+                  │
+         ┌────────▼────────┐
+         │  Single PostgreSQL│
+         └──────────────────┘
+```
+
+The breaking point came during Diwali 2022. We had a 10x spike in loan applications, and the entire platform went down for 4 hours. We lost real money, real users, and real trust.
+
+---
+
+## The Architecture Decision
+
+We evaluated three options:
+
+| Approach | Pros | Cons |
+|:---------|:-----|:-----|
+| Vertical scaling | Fast, cheap | Can't solve logical coupling |
+| Serverless | Excellent scaling | Cold starts, complex DX |
+| **Microservices on ECS** | **Control + scalability** | **Operational complexity** |
+
+We chose microservices on **AWS ECS with Fargate**, backed by **Redis** for session management and cross-service messaging via **RabbitMQ**.
+
+---
+
+## The Migration Strategy: Strangler Fig
+
+We used the **Strangler Fig pattern** — gradually extracting services from the monolith without a big bang rewrite.
+
+**Phase 1 — Extract the Notification Service** (Week 1-3)
+
+This was the safest first extraction because notifications are fire-and-forget. We:
+
+1. Created a new `notification-service` in a separate repo
+2. Had the monolith publish events to RabbitMQ instead of calling notifications directly
+3. Deployed the new service alongside the monolith
+4. Monitored for 2 weeks before removing the old notification code
+
+**Phase 2 — Extract Authentication** (Week 4-8)
+
+Auth is critical, so we moved carefully:
+
+```typescript
+// Before: Auth was embedded in the monolith
+router.post('/login', async (req, res) => {
+  const user = await db.findUser(req.body.email)
+  const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET)
+  res.json({ token })
+})
+
+// After: Auth service with its own database
+// monolith calls auth-service via internal service mesh
+const authResponse = await axios.post(
+  `${AUTH_SERVICE_URL}/validate`,
+  { token: req.headers.authorization }
+)
+```
+
+**Phase 3 — Extract the Loan Engine** (Week 9-16)
+
+The loan engine was our core domain logic — the most complex extraction. We:
+
+1. Built an **anti-corruption layer** between old and new code
+2. Used **feature flags** to route a small % of traffic to the new service
+3. Gradually increased the percentage as confidence grew
+
+---
+
+## The Results
+
+After 6 months of careful migration:
+
+- **Infrastructure costs**: Down 35% (independent scaling of each service)
+- **Deployment time**: From 2+ hours to under 10 minutes per service
+- **Uptime**: 99.9% SLA consistently achieved
+- **On-call alert volume**: Down 65% (better isolation means fewer cascading failures)
+
+---
+
+## Key Lessons
+
+**1. Start with the least critical service.** Your Notification or Email service is a perfect first extraction — low risk, high learning value.
+
+**2. Your database is the hardest part.** We kept a shared database for longer than ideal because splitting it requires careful data ownership design.
+
+**3. Observability before you split.** We invested heavily in **NewRelic** instrumentation *before* starting the migration. Flying blind during a microservices migration is a recipe for disaster.
+
+**4. The Strangler Fig pattern works.** Resist the urge to do a big-bang rewrite. Migrate incrementally, and your users won't notice.
+
+If you're considering a similar migration, I'm happy to chat. Hit me up on [LinkedIn](https://linkedin.com/in/himanshu31shr).

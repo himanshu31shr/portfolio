@@ -1,0 +1,65 @@
+---
+description: "MDX blog post conventions, frontmatter schema, and blog utility rules"
+globs: ["content/**/*", "lib/blog.ts", "app/blog/**/*", "__tests__/lib/blog*"]
+alwaysApply: false
+---
+
+# Blog Conventions
+
+## MDX Frontmatter Schema
+
+Every blog post **must** have all of these fields:
+
+```yaml
+---
+title: "Post Title Here"
+date: "2026-05-19"         # ISO 8601 date, newest first in listings
+excerpt: "One-sentence description for listing cards and SEO meta."
+tags: ["nextjs", "devops"] # lowercase, hyphenated, 2-5 tags
+readTime: "8 min read"     # estimate
+coverImage: "/images/blog/filename.jpg"  # placed in public/images/blog/
+published: true            # false = draft (excluded from listing)
+---
+```
+
+## File Naming
+- Filename = URL slug: `my-post-title.mdx` → `/blog/my-post-title`
+- Use lowercase, hyphen-separated (kebab-case)
+- Place in `content/blog/`
+
+## lib/blog.ts API
+```ts
+getAllPosts()              // Returns PostMeta[] sorted by date desc, published only
+getPostBySlug(slug)       // Returns { meta: PostMeta, content: string }
+getPostSlugs()            // Returns string[] for generateStaticParams()
+```
+
+## Rendering
+- `app/blog/[slug]/page.tsx` renders MDX with `next-mdx-remote/rsc`
+- Blog prose is styled with `@tailwindcss/typography` (`prose prose-invert` classes)
+- Custom MDX components: `<Callout>`, `<CodeBlock>` (to be added in components/)
+
+## Image Handling
+- Cover images go in `public/images/blog/`
+- Use `<img>` with explicit width/height and `alt` text (next/image optimization is disabled)
+
+## Writing Style for Blog Posts
+- Write from first-person perspective (it's Himanshu's blog)
+- Start with a compelling hook — a metric, problem statement, or surprising insight
+- Include code examples where relevant (MDX supports JSX)
+- End with key takeaways or next steps section
+
+## Testing Blog Pages
+```tsx
+vi.mock('next-mdx-remote/rsc', () => ({
+  MDXRemote: ({ source }: { source: string }) => (
+    <div data-testid="mdx-content">{source}</div>
+  )
+}))
+
+vi.mock('@/lib/blog', () => ({
+  getAllPosts: vi.fn(() => mockPosts),
+  getPostBySlug: vi.fn(() => ({ meta: mockPost, content: '# Hello' })),
+  getPostSlugs: vi.fn(() => ['test-post']),
+}))
+```

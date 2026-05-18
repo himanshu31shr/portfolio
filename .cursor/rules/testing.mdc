@@ -1,0 +1,71 @@
+---
+description: "Vitest and React Testing Library conventions — 100% coverage required"
+globs: ["__tests__/**/*", "**/*.test.ts", "**/*.test.tsx", "vitest.config.mts", "vitest.setup.ts"]
+alwaysApply: false
+---
+
+# Testing Conventions
+
+## Framework
+- **Test runner**: Vitest with `globals: true`
+- **DOM rendering**: React Testing Library (`@testing-library/react`)
+- **Assertions**: `@testing-library/jest-dom` (available via `vitest.setup.ts`)
+
+## Coverage Requirements
+100% across statements, branches, functions, and lines — enforced via Vitest thresholds.
+
+## File Structure
+```
+__tests__/
+  components/Hero.test.tsx     ← mirrors components/Hero.tsx
+  components/Footer.test.tsx
+  lib/blog.test.ts             ← mirrors lib/blog.ts
+  lib/constants.test.ts
+  app/page.test.tsx
+  app/blog/page.test.tsx
+```
+
+## Pre-mocked in vitest.setup.ts
+- `framer-motion` → passthrough div/span renders (no animation in tests)
+- `next/font/google` → returns `{ className: 'mock-...' }`
+- `next/navigation` → stub router, pathname
+
+## Example Test Pattern
+```tsx
+import { render, screen } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+import { Footer } from '@/components/Footer'
+
+describe('Footer', () => {
+  it('renders the owner name', () => {
+    render(<Footer />)
+    expect(screen.getByText(/Himanshu Shrivastava/i)).toBeInTheDocument()
+  })
+
+  it('renders GitHub link', () => {
+    render(<Footer />)
+    const link = screen.getByRole('link', { name: /github/i })
+    expect(link).toHaveAttribute('href', expect.stringContaining('github.com'))
+  })
+})
+```
+
+## Query Priority (best → worst)
+1. `screen.getByRole` — most accessible, preferred
+2. `screen.getByLabelText` — for form fields
+3. `screen.getByText` — for visible text
+4. `screen.getByAltText` — for images
+5. `screen.getByTestId` — last resort only
+
+## Mocking MDX (for blog pages)
+```tsx
+vi.mock('next-mdx-remote/rsc', () => ({
+  MDXRemote: ({ source }: { source: string }) => <div data-testid="mdx">{source}</div>
+}))
+```
+
+## Rules
+- Test what users see/do — not internal state or implementation
+- One `describe` per component, multiple `it` blocks
+- Test all conditional branches (affects coverage)
+- Test accessibility: check roles, labels, and keyboard interactions

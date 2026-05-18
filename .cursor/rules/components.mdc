@@ -1,0 +1,54 @@
+---
+description: "React component patterns, naming, and structure conventions for this portfolio"
+globs: ["components/**/*", "app/**/*.tsx", "app/**/*.ts"]
+alwaysApply: false
+---
+
+# Component Conventions
+
+## Structure Rules
+- **Functional components** with **named exports** only — never default exports, never class components
+- Use `'use client'` ONLY when the component requires: hooks that use browser APIs, event listeners, Framer Motion animations with `useAnimation`/`useInView`
+- Props: define a TypeScript interface inline above the component
+
+## Example Pattern
+```tsx
+'use client'
+
+import { SomeIcon } from 'lucide-react'
+
+interface CardProps {
+  title: string
+  description: string
+  icon?: React.ReactNode
+  className?: string
+}
+
+export function Card({ title, description, icon, className = '' }: CardProps) {
+  return (
+    <div className={`glass p-6 ${className}`}>
+      {icon && <span className="text-accent-blue mb-3 block">{icon}</span>}
+      <h3 className="text-text-primary font-semibold text-lg mb-2">{title}</h3>
+      <p className="text-text-secondary text-sm">{description}</p>
+    </div>
+  )
+}
+```
+
+## Styling Rules
+- Always use Tailwind classes — never `style={{}}` or inline styles
+- Use `.glass` for glassmorphism cards
+- Use `.gradient-text` for gradient headings
+- Use `.section` wrapper for page sections
+- Use `.tag` for skill/tech pills
+- Use `.btn-gradient` / `.btn-outline` for buttons
+
+## Animation Rules
+- Wrap scroll-animated sections in `<ScrollReveal>`
+- Use `<GlassCard>` for glass containers
+- Framer Motion is client-only — keep Server Components animation-free
+
+## Data Rules
+- Resume text/data → always from `lib/constants.ts`
+- Icons → always from `lucide-react`
+- Images → in `public/images/`, use `<img>` with `alt` text (next/image is unoptimized)
