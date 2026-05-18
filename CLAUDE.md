@@ -7,6 +7,7 @@
 This is the personal portfolio + blog for **Himanshu Shrivastava**, a Senior Full Stack Engineer with 9+ years of experience in fintech, SaaS, and cloud-native platforms.
 
 - Live site: https://himanshu31shr.github.io/portfolio/
+- Tech stack: Next.js 16 (App Router, static export), React 19, Tailwind CSS v4, Framer Motion, Vitest
 - Resume data source: `lib/constants.ts`
 - Blog posts: `content/blog/*.mdx`
 

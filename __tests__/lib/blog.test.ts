@@ -130,6 +130,57 @@ describe('blog utilities', () => {
       const posts = getAllPosts()
       expect(posts).toHaveLength(1)
     })
+
+    it('sets defaults for missing frontmatter fields in getAllPosts', async () => {
+      const minimalMdx = `---
+published: true
+---
+Content`
+      mockExistsSync.mockReturnValue(true)
+      mockReaddirSync.mockReturnValue(['minimal.mdx'])
+      mockReadFileSync.mockReturnValue(minimalMdx)
+
+      const { getAllPosts } = await import('@/lib/blog')
+      const posts = getAllPosts()
+
+      expect(posts).toHaveLength(1)
+      expect(posts[0].title).toBe('')
+      expect(posts[0].date).toBe('')
+      expect(posts[0].excerpt).toBe('')
+      expect(posts[0].tags).toEqual([])
+      expect(posts[0].readTime).toBe('')
+      expect(posts[0].coverImage).toBe('')
+      expect(posts[0].published).toBe(true)
+    })
+
+    it('handles sorting when posts are in different initial readdirSync orders', async () => {
+      mockExistsSync.mockReturnValue(true)
+      mockReaddirSync.mockReturnValue(['test.mdx', 'older.mdx'])
+      mockReadFileSync.mockImplementation((p: string) => {
+        if (String(p).includes('older')) return MOCK_MDX_OLDER
+        return MOCK_MDX_PUBLISHED
+      })
+
+      const { getAllPosts } = await import('@/lib/blog')
+      const posts = getAllPosts()
+      expect(posts).toHaveLength(2)
+      expect(posts[0].date).toBe('2026-05-01')
+      expect(posts[1].date).toBe('2026-03-01')
+    })
+
+    it('handles missing published field in getAllPosts by defaulting to false and filtering it out', async () => {
+      const missingPublishedMdx = `---
+title: "No Published Field"
+---
+Content`
+      mockExistsSync.mockReturnValue(true)
+      mockReaddirSync.mockReturnValue(['nopub.mdx'])
+      mockReadFileSync.mockReturnValue(missingPublishedMdx)
+
+      const { getAllPosts } = await import('@/lib/blog')
+      const posts = getAllPosts()
+      expect(posts).toHaveLength(0)
+    })
   })
 
   describe('getPostBySlug', () => {
@@ -171,6 +222,25 @@ Content
       expect(result?.meta.tags).toEqual([])
       expect(result?.meta.readTime).toBe('')
       expect(result?.meta.coverImage).toBe('')
+    })
+
+    it('sets all defaults when frontmatter is completely empty', async () => {
+      const emptyMdx = `---
+---
+Content`
+      mockExistsSync.mockReturnValue(true)
+      mockReadFileSync.mockReturnValue(emptyMdx)
+
+      const { getPostBySlug } = await import('@/lib/blog')
+      const result = getPostBySlug('empty')
+
+      expect(result?.meta.title).toBe('')
+      expect(result?.meta.date).toBe('')
+      expect(result?.meta.excerpt).toBe('')
+      expect(result?.meta.tags).toEqual([])
+      expect(result?.meta.readTime).toBe('')
+      expect(result?.meta.coverImage).toBe('')
+      expect(result?.meta.published).toBe(false)
     })
   })
 
