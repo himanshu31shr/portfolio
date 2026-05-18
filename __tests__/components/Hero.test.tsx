@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Hero } from '@/components/Hero'
 
@@ -76,4 +76,42 @@ describe('Hero', () => {
     render(<Hero />)
     expect(screen.getByText(/hello, i'm/i)).toBeInTheDocument()
   })
+
+  it('updates typewriter text over time', () => {
+    render(<Hero />)
+    
+    // First role is 'Senior Full Stack Engineer' (26 characters)
+    // Advance timers step-by-step to type it
+    for (let i = 0; i < 26; i++) {
+      act(() => {
+        vi.advanceTimersByTime(80)
+      })
+    }
+    expect(screen.getByLabelText('Current role: Senior Full Stack Engineer')).toBeInTheDocument()
+    
+    // Pause of 2000ms at completion
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+    
+    // Deleting starts (40ms per char)
+    for (let i = 0; i < 26; i++) {
+      act(() => {
+        vi.advanceTimersByTime(40)
+      })
+    }
+    expect(screen.getByLabelText('Current role:')).toBeInTheDocument()
+    
+    // Switch to the next role (500ms pause)
+    act(() => {
+      vi.advanceTimersByTime(500)
+    })
+    
+    // Let's type a few chars of next role 'Startup Technology Leader'
+    act(() => {
+      vi.advanceTimersByTime(80)
+    })
+    expect(screen.getByLabelText('Current role: S')).toBeInTheDocument()
+  })
 })
+

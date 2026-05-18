@@ -86,6 +86,19 @@ describe('Navbar', () => {
     expect(progressBar).toHaveAttribute('aria-valuenow', '50')
   })
 
+  it('handles scroll progress when scrollHeight equals innerHeight (totalHeight is 0)', () => {
+    Object.defineProperty(document.documentElement, 'scrollHeight', { value: 800, configurable: true })
+    Object.defineProperty(window, 'innerHeight', { value: 800, configurable: true })
+
+    render(<Navbar />)
+    
+    Object.defineProperty(window, 'scrollY', { value: 0, configurable: true })
+    fireEvent.scroll(window)
+    
+    const progressBar = screen.getByRole('progressbar')
+    expect(progressBar).toHaveAttribute('aria-valuenow', '0')
+  })
+
   it('hides hash links when on the blog page', () => {
     vi.mocked(usePathname).mockReturnValue('/blog')
     

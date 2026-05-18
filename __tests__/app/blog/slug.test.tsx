@@ -10,9 +10,21 @@ vi.mock('@/lib/blog', () => ({
 
 // Mock next-mdx-remote/rsc
 vi.mock('next-mdx-remote/rsc', () => ({
-  MDXRemote: ({ source }: { source: string }) => (
-    <div data-testid="mdx-content">{source}</div>
-  ),
+  MDXRemote: ({ source, components }: { source: string; components?: Record<string, React.ComponentType<React.ComponentPropsWithoutRef<'img'>>> }) => {
+    if (components && components.img) {
+      const ImgComponent = components.img
+      return (
+        <div data-testid="mdx-content">
+          {source}
+          <ImgComponent src="/test-img.jpg" alt="test-image-alt" />
+          <ImgComponent src="http://external.com/test-img.jpg" alt="test-image-alt-external" />
+          <ImgComponent alt="no-src-image" />
+          <ImgComponent src="/no-alt.jpg" />
+        </div>
+      )
+    }
+    return <div data-testid="mdx-content">{source}</div>
+  },
 }))
 
 // Mock next/navigation
@@ -141,4 +153,67 @@ describe('BlogPostPage', () => {
     const params = await generateStaticParams()
     expect(params).toEqual([{ slug: 'post-a' }, { slug: 'post-b' }])
   })
+
+  it('generateMetadata returns correct metadata for valid post', async () => {
+    mockBlog.getPostBySlug.mockReturnValue(MOCK_POST)
+    const { generateMetadata } = await import('@/app/blog/[slug]/page')
+    const metadata = await generateMetadata({ params: Promise.resolve({ slug: 'test-post' }) })
+    expect(metadata.title).toBe('My Test Post')
+    expect(metadata.description).toBe('A great post about testing')
+    expect(metadata.openGraph?.title).toBe('My Test Post')
+  })
+
+  it('generateMetadata returns Not Found title when post does not exist', async () => {
+    mockBlog.getPostBySlug.mockReturnValue(null)
+    const { generateMetadata } = await import('@/app/blog/[slug]/page')
+    const metadata = await generateMetadata({ params: Promise.resolve({ slug: 'nonexistent' }) })
+    expect(metadata.title).toBe('Post Not Found')
+  })
+
+  it('renders custom image elements inside MDXRemote with correct paths', async () => {
+    mockBlog.getPostBySlug.mockReturnValue(MOCK_POST)
+    mockBlog.getAllPosts.mockReturnValue([])
+
+    // Set process.env.NEXT_PUBLIC_BASE_PATH to test the base path logic
+    const originalBasePath = process.env.NEXT_PUBLIC_BASE_PATH
+    process.env.NEXT_PUBLIC_BASE_PATH = '/portfolio'
+
+    const { default: BlogPostPage } = await import('@/app/blog/[slug]/page')
+    const { container } = render(await BlogPostPage({ params: Promise.resolve({ slug: 'test-post' }) }))
+
+    // External image should preserve its src
+    const externalImg = screen.getByAltText('test-image-alt-external')
+    expect(externalImg).toHaveAttribute('src', 'http://external.com/test-img.jpg')
+
+    // Internal image should have the base path prepended
+    const internalImg = screen.getByAltText('test-image-alt')
+    expect(internalImg).toHaveAttribute('src', '/portfolio/test-img.jpg')
+
+    // No-src image should have base path prepended to empty string
+    const noSrcImg = screen.getByAltText('no-src-image')
+    expect(noSrcImg).toHaveAttribute('src', '/portfolio/')
+
+    // No-alt image should have fallback alt of empty string (queried directly as it has no implicit img role)
+    const noAltImg = container.querySelector('img[src*="no-alt.jpg"]')
+    expect(noAltImg).not.toBeNull()
+    expect(noAltImg).toHaveAttribute('alt', '')
+
+    // Restore environment
+    process.env.NEXT_PUBLIC_BASE_PATH = originalBasePath
+  })
+
+  it('generateMetadata returns empty images array when coverImage is not present', async () => {
+    const postWithoutCover = {
+      ...MOCK_POST,
+      meta: {
+        ...MOCK_POST.meta,
+        coverImage: '',
+      },
+    }
+    mockBlog.getPostBySlug.mockReturnValue(postWithoutCover)
+    const { generateMetadata } = await import('@/app/blog/[slug]/page')
+    const metadata = await generateMetadata({ params: Promise.resolve({ slug: 'test-post' }) })
+    expect(metadata.openGraph?.images).toEqual([])
+  })
 })
+
