@@ -45,47 +45,26 @@ Vitest (100% coverage gate)
 
 ---
 
-## Workflow 1: Automated PR Creation
+## Workflow 1: Automated PR Creation via Agentic Skill
 
-One of the highest-impact changes: having Claude Code automatically create well-structured PRs from feature branches.
+One of the highest-impact changes: having our AI assistant automatically create well-structured PRs from feature branches using a custom local skill/command, rather than manually writing descriptions or relying on post-push CI pipelines.
 
-```yaml
-# .github/workflows/auto-pr.yml
-name: Auto PR Creation
-
-on:
-  push:
-    branches:
-      - 'feature/**'
-      - 'fix/**'
-
-jobs:
-  create-pr:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Generate PR description with Claude
-        uses: anthropic-ai/claude-code-action@v1
-        with:
-          prompt: |
-            Analyze the git diff between this branch and main.
-            Create a comprehensive PR description including:
-            1. What changed and why
-            2. How to test the changes
-            3. Any breaking changes or migration notes
-            4. Screenshot/recording requirements
-          
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          title: ${{ steps.generate.outputs.title }}
-          body: ${{ steps.generate.outputs.description }}
-          draft: true
+```bash
+# We use a custom AI slash command directly in our agentic terminal:
+/add-pr
 ```
+
+When invoked, the agent automatically executes a predefined skill:
+1. Analyzes the git diff between the current branch and `main`.
+2. Generates a comprehensive PR description including:
+   - What changed and why
+   - How to test the changes
+   - Any breaking changes or migration notes
+3. Creates the pull request using the GitHub MCP server.
+
+This "shifts left" the PR creation process, happening right in the developer's environment when the context is the freshest, rather than waiting for a CI runner.
+
+> **Deep dive:** I wrote a full article on building this skill, including the complete prompt, GitHub MCP setup, and pluggable extensions → [Building an Agentic PR Generator: A Deep Dive](/blog/implementing-automated-pr-generation)
 
 **Time saved**: ~20 minutes per PR × 3 PRs/week = **1 hour/engineer/week**
 
