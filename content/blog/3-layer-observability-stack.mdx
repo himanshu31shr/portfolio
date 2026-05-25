@@ -1,0 +1,110 @@
+---
+title: "The 3-Layer Observability Stack That Cut Our MTTR by 30%"
+date: "2026-05-25"
+excerpt: "How we stopped relying on disjointed dashboards to debug production issues, and built a unified telemetry pipeline using SLOs, OpenTelemetry, and structured logging."
+tags: ["observability", "platform-engineering", "sre", "opentelemetry", "monitoring"]
+readTime: "6 min read"
+coverImage: "/images/blog/observability-stack.png"
+published: true
+---
+
+> **TL;DR:** Connect your SLO alerts → distributed traces → correlated logs into a single click-through workflow. Our debugging time dropped from 45 minutes of guesswork to under 5 minutes of systematic isolation.
+
+A few months ago, our user registration service started failing intermittently—sporadic latency spikes that occasionally killed sign-ups and frustrated users.
+
+If you work in microservices, you know what happened next: five engineers on a call, scrambling across different dashboards, trying to guess which log matched which failed request.
+
+We even tried feeding millions of raw logs into an LLM, hoping it would spot the pattern. It just hallucinated fake database errors.
+
+The problem wasn't a lack of tools or data. **Our telemetry wasn't connected.** Classic dashboard blindness.
+
+So we fixed the root cause: how engineers actually debug. By linking three layers of telemetry together, we cut Mean Time to Resolution (MTTR) by 30% and reduced debugging time from 45 minutes to under 5.
+
+Here's the exact stack.
+
+---
+
+## Layer 1: SLO-Driven Alerts (The "Why")
+
+Before this overhaul, our alerting was noise. CPU spikes, memory crossing 80%, generic 500 thresholds—engineers treated PagerDuty like a spam folder.
+
+We moved to **Service-Level Objectives (SLOs)** and stopped alerting on infrastructure metrics entirely. Only user-facing symptoms matter.
+
+For registration, we defined two SLOs:
+1. **Latency:** 99% of requests complete in under 250ms (rolling 5-minute window)
+2. **Error Rate:** Less than 0.1% of requests return 5xx
+
+If CPU spikes to 95% but latency stays under 250ms, nobody gets paged. But if p99 latency creeps to 300ms, the alert fires.
+
+Now every page actually matters. The SLO alert answers *Why*—we're impacting user experience.
+
+---
+
+## Layer 2: Distributed Tracing (The "Where")
+
+Once an SLO alert fires, the immediate question is: *"Which service is causing this?"*
+
+A single user request might touch an API Gateway, Auth service, Email Dispatcher, and User Database. Finding the bottleneck used to mean checking four different systems.
+
+We implemented **OpenTelemetry (OTel)** across our stack. Every request gets a unique `trace_id`, propagated through HTTP headers (W3C Trace Context) to every downstream service and database query.
+
+Our stack: **Prometheus** for SLO metrics, **Jaeger** for traces, **Grafana** for visualization. When an SLO alert fires, we click through and instantly see a waterfall chart of the request.
+
+The trace shows: API Gateway took 2ms, Auth took 10ms, but a specific Postgres query in User Profile took 480ms.
+
+We immediately know *Where* to look.
+
+---
+
+## Layer 3: Trace-Correlated Logs (The "What")
+
+Traces find the bottleneck, but they don't explain *why* it exists. For that, you need logs.
+
+Our biggest gap: traces and logs lived in separate silos. We fixed this by updating our logging library (Pino) to automatically inject the active OpenTelemetry context into every log entry.
+
+```javascript
+import pino from 'pino'
+import { trace, context } from '@opentelemetry/api'
+
+const logger = pino({
+  mixin() {
+    const span = trace.getSpan(context.active())
+    if (!span) return {}
+    const { traceId, spanId } = span.spanContext()
+    return { trace_id: traceId, span_id: spanId }
+  }
+})
+
+// Every log now automatically includes trace context
+logger.info({ userId: user.id }, 'Processing user registration')
+// Output: {"trace_id":"4bf92f...","span_id":"00f067...","userId":"abc123","msg":"Processing user registration"}
+```
+
+This was the final piece.
+
+When an engineer identifies a slow span in Jaeger, they click **"View Correlated Logs."** Grafana filters Loki for that exact `trace_id`.
+
+Instead of millions of logs from 50 concurrent users, the engineer sees the 12 log lines for that single request, in order. They instantly spot: `Warning: Connection pool exhausted, waiting for available client.`
+
+We found the *What*.
+
+---
+
+## The Result: Debugging with Confidence
+
+By linking SLOs → Traces → Logs into a unified workflow, debugging transformed overnight.
+
+When a sign-up fails today:
+1. SLO alert fires in Slack with trace link
+2. Engineer clicks through to Jaeger waterfall
+3. Trace highlights the slow service
+4. One click filters to that request's logs
+
+**Before:** 45 minutes of guessing across dashboards.  
+**After:** Under 5 minutes of systematic isolation.
+
+You don't need a magical AI tool to parse messy logs. You need a connected debugging path.
+
+---
+
+*Have you connected your traces and logs? I'd love to hear what's worked (or hasn't) for your team—[find me on LinkedIn](https://linkedin.com/in/himanshu31shr).*
