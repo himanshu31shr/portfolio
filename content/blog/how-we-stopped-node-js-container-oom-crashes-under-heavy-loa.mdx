@@ -41,6 +41,8 @@ Node.js uses V8's managed heap for JavaScript objects, but relies on the system'
 
 > In containerised environments with hard memory limits, fragmentation isn't just wasteful — it's fatal. The OOM killer doesn't care about your heap size; it cares about RSS.
 
+![ptmalloc2 vs jemalloc memory arena architecture](/images/blog/how-we-stopped-node-js-container-oom-crashes-under-heavy-loa-allocator-comparison.png)
+
 At our concurrency levels, the libuv worker pool, DNS resolution threads, and crypto operations were enough to create dozens of arenas, each hoarding freed fragments. Mystery solved — now we needed a fix.
 
 ## The Fix: Switching to jemalloc
