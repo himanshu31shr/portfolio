@@ -1,0 +1,74 @@
+<svg width="1200" height="520" viewBox="0 0 1200 520" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Three-lane AI coding assistant workflow</title>
+  <desc id="desc">A diagram showing human design, AI-assisted scaffolding, and human verification as three connected workflow lanes.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A0A0F"/>
+      <stop offset="1" stop-color="#141421"/>
+    </linearGradient>
+    <linearGradient id="lane1" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+    <linearGradient id="lane2" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#EC4899"/>
+    </linearGradient>
+    <linearGradient id="lane3" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#22C55E"/>
+      <stop offset="1" stop-color="#A3E635"/>
+    </linearGradient>
+    <filter id="softGlow" x="-30%" y="-40%" width="160%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feBlend in="SourceGraphic" in2="blur" mode="screen"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="520" rx="32" fill="url(#bg)"/>
+  <g opacity="0.16">
+    <path d="M80 104H1120M80 208H1120M80 312H1120M80 416H1120" stroke="#FFFFFF"/>
+    <path d="M240 60V460M480 60V460M720 60V460M960 60V460" stroke="#FFFFFF"/>
+  </g>
+
+  <text x="600" y="72" fill="#F0F0F5" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" text-anchor="middle">The Workflow That Made AI Useful</text>
+  <text x="600" y="106" fill="#A0A0B0" font-family="Inter, Arial, sans-serif" font-size="18" text-anchor="middle">Keep judgment with engineers. Give repetitive scaffolding to the assistant. Review the result like production code.</text>
+
+  <g transform="translate(95 165)">
+    <rect width="285" height="220" rx="26" fill="#FFFFFF" fill-opacity="0.08" stroke="#FFFFFF" stroke-opacity="0.14"/>
+    <circle cx="56" cy="58" r="28" fill="url(#lane1)" filter="url(#softGlow)"/>
+    <path d="M47 58L55 66L70 49" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="96" y="55" fill="#F0F0F5" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="800">Human Design</text>
+    <text x="96" y="83" fill="#A0A0B0" font-family="Inter, Arial, sans-serif" font-size="15">architecture and risk</text>
+    <path d="M38 126H230M38 158H196M38 190H222" stroke="#C7D2FE" stroke-opacity="0.65" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(458 165)">
+    <rect width="285" height="220" rx="26" fill="#FFFFFF" fill-opacity="0.08" stroke="#FFFFFF" stroke-opacity="0.14"/>
+    <circle cx="56" cy="58" r="28" fill="url(#lane2)" filter="url(#softGlow)"/>
+    <path d="M56 42V74M40 58H72" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+    <text x="96" y="55" fill="#F0F0F5" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="800">AI Scaffold</text>
+    <text x="96" y="83" fill="#A0A0B0" font-family="Inter, Arial, sans-serif" font-size="15">DTOs, schemas, glue</text>
+    <rect x="38" y="120" width="210" height="72" rx="16" fill="#0A0A0F" stroke="#FFFFFF" stroke-opacity="0.12"/>
+    <path d="M62 146H154M62 169H210" stroke="#FBCFE8" stroke-opacity="0.62" stroke-width="7" stroke-linecap="round"/>
+  </g>
+
+  <g transform="translate(821 165)">
+    <rect width="285" height="220" rx="26" fill="#FFFFFF" fill-opacity="0.08" stroke="#FFFFFF" stroke-opacity="0.14"/>
+    <circle cx="56" cy="58" r="28" fill="url(#lane3)" filter="url(#softGlow)"/>
+    <path d="M43 60L54 71L73 45" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="96" y="55" fill="#F0F0F5" font-family="Inter, Arial, sans-serif" font-size="23" font-weight="800">Human Verify</text>
+    <text x="96" y="83" fill="#A0A0B0" font-family="Inter, Arial, sans-serif" font-size="15">edge cases and tests</text>
+    <path d="M44 144L78 178L132 118" stroke="#BBF7D0" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M158 134H238M158 166H216" stroke="#BBF7D0" stroke-opacity="0.55" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <path d="M396 275H434" stroke="#8B5CF6" stroke-width="8" stroke-linecap="round"/>
+  <path d="M423 256L442 275L423 294" stroke="#8B5CF6" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M759 275H797" stroke="#EC4899" stroke-width="8" stroke-linecap="round"/>
+  <path d="M786 256L805 275L786 294" stroke="#EC4899" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <g transform="translate(392 423)">
+    <rect width="416" height="50" rx="25" fill="#FFFFFF" fill-opacity="0.08" stroke="#FFFFFF" stroke-opacity="0.14"/>
+    <text x="208" y="32" fill="#F0F0F5" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" text-anchor="middle">Outcome: less low-leverage typing, more review bandwidth</text>
+  </g>
+</svg>
