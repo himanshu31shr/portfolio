@@ -1,0 +1,91 @@
+<svg width="1200" height="675" viewBox="0 0 1200 675" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">AI-assisted boilerplate reduction workflow</title>
+  <desc id="desc">A dark portfolio-style illustration showing repetitive code blocks compressed into a smaller reviewed output through a three-lane AI assistant workflow.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="675" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A0A0F"/>
+      <stop offset="0.55" stop-color="#12121A"/>
+      <stop offset="1" stop-color="#1A1025"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="250" y1="130" x2="950" y2="545" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6366F1"/>
+      <stop offset="0.52" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#EC4899"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.05"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="22" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.49 0 0 0 0 0.32 0 0 0 0 1 0 0 0 0.45 0"/>
+      <feBlend in="SourceGraphic" mode="screen"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <g opacity="0.22">
+    <path d="M0 135H1200M0 270H1200M0 405H1200M0 540H1200" stroke="#6366F1" stroke-opacity="0.35"/>
+    <path d="M150 0V675M300 0V675M450 0V675M600 0V675M750 0V675M900 0V675M1050 0V675" stroke="#8B5CF6" stroke-opacity="0.25"/>
+  </g>
+
+  <circle cx="275" cy="185" r="160" fill="#6366F1" opacity="0.18" filter="url(#glow)"/>
+  <circle cx="920" cy="500" r="190" fill="#EC4899" opacity="0.14" filter="url(#glow)"/>
+
+  <g transform="translate(90 95)">
+    <rect width="315" height="425" rx="26" fill="url(#card)" stroke="#FFFFFF" stroke-opacity="0.14"/>
+    <text x="32" y="62" fill="#F0F0F5" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">Boilerplate</text>
+    <text x="32" y="94" fill="#A0A0B0" font-family="Inter, Arial, sans-serif" font-size="16">DTOs, schemas, handlers, tests</text>
+    <g transform="translate(32 132)" stroke-linecap="round">
+      <rect width="250" height="34" rx="10" fill="#0A0A0F" stroke="#FFFFFF" stroke-opacity="0.1"/>
+      <path d="M22 17H132" stroke="#6366F1" stroke-width="6"/>
+      <path d="M152 17H218" stroke="#FFFFFF" stroke-opacity="0.24" stroke-width="6"/>
+      <rect y="56" width="250" height="34" rx="10" fill="#0A0A0F" stroke="#FFFFFF" stroke-opacity="0.1"/>
+      <path d="M22 73H96" stroke="#8B5CF6" stroke-width="6"/>
+      <path d="M118 73H222" stroke="#FFFFFF" stroke-opacity="0.24" stroke-width="6"/>
+      <rect y="112" width="250" height="34" rx="10" fill="#0A0A0F" stroke="#FFFFFF" stroke-opacity="0.1"/>
+      <path d="M22 129H160" stroke="#EC4899" stroke-width="6"/>
+      <path d="M184 129H220" stroke="#FFFFFF" stroke-opacity="0.24" stroke-width="6"/>
+      <rect y="168" width="250" height="34" rx="10" fill="#0A0A0F" stroke="#FFFFFF" stroke-opacity="0.1"/>
+      <path d="M22 185H116" stroke="#6366F1" stroke-width="6"/>
+      <path d="M140 185H220" stroke="#FFFFFF" stroke-opacity="0.24" stroke-width="6"/>
+      <rect y="224" width="250" height="34" rx="10" fill="#0A0A0F" stroke="#FFFFFF" stroke-opacity="0.1"/>
+      <path d="M22 241H136" stroke="#8B5CF6" stroke-width="6"/>
+      <path d="M160 241H214" stroke="#FFFFFF" stroke-opacity="0.24" stroke-width="6"/>
+    </g>
+  </g>
+
+  <g transform="translate(475 154)">
+    <rect width="250" height="305" rx="34" fill="#0A0A0F" stroke="url(#accent)" stroke-width="3"/>
+    <circle cx="125" cy="96" r="48" fill="url(#accent)" opacity="0.25"/>
+    <path d="M125 47V145M76 96H174M91 61L159 131M159 61L91 131" stroke="url(#accent)" stroke-width="8" stroke-linecap="round"/>
+    <text x="125" y="189" fill="#F0F0F5" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">AI Scaffold</text>
+    <text x="125" y="224" fill="#A0A0B0" font-family="Inter, Arial, sans-serif" font-size="16" text-anchor="middle">constrained output</text>
+    <text x="125" y="252" fill="#A0A0B0" font-family="Inter, Arial, sans-serif" font-size="16" text-anchor="middle">existing patterns</text>
+  </g>
+
+  <g transform="translate(795 95)">
+    <rect width="315" height="425" rx="26" fill="url(#card)" stroke="#FFFFFF" stroke-opacity="0.14"/>
+    <text x="32" y="62" fill="#F0F0F5" font-family="Inter, Arial, sans-serif" font-size="28" font-weight="700">Reviewed Output</text>
+    <text x="32" y="94" fill="#A0A0B0" font-family="Inter, Arial, sans-serif" font-size="16">less typing, more verification</text>
+    <g transform="translate(32 140)">
+      <rect width="250" height="170" rx="18" fill="#0A0A0F" stroke="#FFFFFF" stroke-opacity="0.1"/>
+      <path d="M30 44H138M30 82H204M30 120H164" stroke="#FFFFFF" stroke-opacity="0.24" stroke-width="8" stroke-linecap="round"/>
+      <path d="M188 118L212 142L244 94" stroke="#22C55E" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g transform="translate(32 350)">
+      <rect width="112" height="40" rx="20" fill="#6366F1" fill-opacity="0.18" stroke="#6366F1" stroke-opacity="0.45"/>
+      <text x="56" y="26" fill="#C7D2FE" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" text-anchor="middle">30% less</text>
+      <rect x="132" width="118" height="40" rx="20" fill="#EC4899" fill-opacity="0.14" stroke="#EC4899" stroke-opacity="0.4"/>
+      <text x="191" y="26" fill="#FBCFE8" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" text-anchor="middle">review-led</text>
+    </g>
+  </g>
+
+  <path d="M425 308H455" stroke="url(#accent)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M443 289L462 308L443 327" stroke="url(#accent)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M745 308H775" stroke="url(#accent)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M763 289L782 308L763 327" stroke="url(#accent)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="600" y="602" fill="#F0F0F5" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="800" text-anchor="middle">Beyond the Hype</text>
+  <text x="600" y="638" fill="#A0A0B0" font-family="Inter, Arial, sans-serif" font-size="18" text-anchor="middle">Human design, AI scaffolding, human verification</text>
+</svg>
