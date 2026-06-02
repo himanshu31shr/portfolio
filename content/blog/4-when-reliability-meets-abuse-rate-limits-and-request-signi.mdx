@@ -1,8 +1,7 @@
 ---
-title: "4. When Reliability Meets Abuse: Rate Limits and Request Signing as SRE Controls
-"
+title: "4. When Reliability Meets Abuse: Rate Limits and Request Signing as SRE Controls"
 date: "2026-06-02"
-excerpt: "How rate limiting and request signing transformed from afterthought security features into core SRE primitives that kept our fintech platform standing at 400K+ users."
+excerpt: "How I implemented rate limiting and request signing to protect a fintech platform serving 400K+ users from abuse — while keeping the system reliable for legitimate traffic."
 tags: [sre, rate-limiting, security, api-design, reliability, node-js]
 readTime: "4 min read"
 coverImage: "/images/blog/4-when-reliability-meets-abuse-rate-limits-and-request-signi.png"
@@ -11,157 +10,164 @@ published: true
 
 ## The Wake-Up Call
 
-At a fintech startup I co-founded, we hit 400K users faster than our infrastructure matured. One Wednesday morning our API gateway started returning 503s across the board. The culprit wasn't a traffic spike from real users — it was a single actor hammering our loan eligibility endpoint at 12,000 requests per minute with scripted credential-stuffing payloads. Our Node.js services buckled, Redis connections pooled up, and legitimate users couldn't even check their balances.
+At a fintech startup I co-founded, we hit 400K users faster than our infrastructure was ready for. The first real stress test wasn't organic traffic — it was abuse. Automated scripts were hammering our transaction endpoints, a handful of IPs were scraping user-facing pages at machine speed, and one particularly creative attacker was replaying signed API calls with modified payloads.
 
-That incident changed how I think about reliability. **Rate limiting and request signing aren't just security features — they're SRE controls.** They sit at the intersection of availability, integrity, and abuse prevention. Without them, your uptime SLO is one bad actor away from a breach.
+Our uptime was holding at 99.9%, but the margin was razor-thin. We weren't going to stay reliable by hoping abusers got bored. We needed **SRE-grade controls** — mechanisms that treated abuse mitigation as a reliability concern, not just a security checkbox.
 
-## Why Traditional Rate Limiting Falls Short
+This post walks through the two pillars I implemented: **rate limiting** and **request signing**. Both are standard tools, but the difference between "we have rate limiting" and "rate limiting actually protects our SLOs" comes down to implementation details.
 
-Most teams start with a naive approach: a global rate limiter in the API gateway that caps requests per IP. We did too. The problem is that IP-based limits break under shared networks (entire office buildings behind one NAT), mobile carriers rotating IPs, and attackers using rotating proxy pools.
+## Designing a Rate Limiting Strategy That Respects SLOs
 
-What we needed was **layered, context-aware rate limiting** — different limits for different operations, applied at multiple levels: per-user, per-endpoint, and per-action sensitivity.
+Most rate limiting tutorials stop at "use a library." The real work starts when you ask: **what are we protecting, and from whom?**
 
-Here's the sliding window implementation we settled on using Redis, deployed behind our Node.js services:
+I broke our API surface into three tiers based on blast radius:
+
+- **Critical paths** (payment initiation, fund transfers): Strict per-user limits, low burst tolerance
+- **Authenticated reads** (balance checks, transaction history): Moderate limits, higher burst allowance
+- **Public endpoints** (login, registration): Per-IP limits with progressive backoff
+
+The key insight was tying rate limit thresholds to our **error budget**. If our SLO was 99.9% availability, we couldn't afford a rate limiting strategy that let 10,000 abusive requests consume backend capacity before kicking in. The limits had to be tight enough to protect the error budget, but loose enough that legitimate users never noticed.
+
+## Implementing Tiered Rate Limiting with Redis
+
+We used Redis as the backing store for rate limit counters — it was already in our stack for session management, and its atomic operations made it a natural fit. Here's the middleware pattern I built in Node.js:
 
 ```typescript
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
+import { Request, Response, NextFunction } from 'express';
 
 const redis = new Redis(process.env.REDIS_URL);
 
-interface RateLimitResult {
-  allowed: boolean;
-  remaining: number;
-  retryAfter?: number;
+interface RateLimitConfig {
+  windowMs: number;
+  maxRequests: number;
+  keyPrefix: string;
 }
 
-async function slidingWindowRateLimit(
-  key: string,
-  maxRequests: number,
-  windowMs: number
-): Promise<RateLimitResult> {
-  const now = Date.now();
-  const windowStart = now - windowMs;
+const TIER_CONFIG: Record<string, RateLimitConfig> = {
+  critical: { windowMs: 60_000, maxRequests: 10, keyPrefix: 'rl:crit' },
+  standard: { windowMs: 60_000, maxRequests: 100, keyPrefix: 'rl:std' },
+  public:   { windowMs: 60_000, maxRequests: 30, keyPrefix: 'rl:pub' },
+};
 
-  const pipeline = redis.pipeline();
-  pipeline.zremrangebyscore(key, 0, windowStart);
-  pipeline.zadd(key, now.toString(), `${now}-${Math.random()}`);
-  pipeline.zcard(key);
-  pipeline.pexpire(key, windowMs);
+export function rateLimiter(tier: keyof typeof TIER_CONFIG) {
+  const config = TIER_CONFIG[tier];
 
-  const results = await pipeline.exec();
-  const currentCount = results![2][1] as number;
+  return async (req: Request, res: Response, next: NextFunction) => {
+    const identifier = req.user?.id || req.ip;
+    const key = `${config.keyPrefix}:${identifier}`;
 
-  return {
-    allowed: currentCount <= maxRequests,
-    remaining: Math.max(0, maxRequests - currentCount),
-    retryAfter: currentCount > maxRequests ? windowMs / 1000 : undefined,
+    const current = await redis.incr(key);
+    if (current === 1) {
+      await redis.pexpire(key, config.windowMs);
+    }
+
+    res.setHeader('X-RateLimit-Limit', config.maxRequests);
+    res.setHeader('X-RateLimit-Remaining', Math.max(0, config.maxRequests - current));
+
+    if (current > config.maxRequests) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        retryAfter: Math.ceil(config.windowMs / 1000),
+      });
+    }
+
+    next();
   };
 }
 ```
 
-The sliding window approach using Redis sorted sets gave us precise control without the burst problems of fixed-window counters. We applied different thresholds per endpoint tier: **100 req/min** for read-heavy endpoints like balance checks, **10 req/min** for sensitive actions like loan applications, and **3 req/min** for OTP generation to prevent SMS bombing.
+The `X-RateLimit-*` headers aren't just good API citizenship — they're **observability hooks**. We piped these into our monitoring stack, and within a week we had dashboards showing exactly which users were consistently hitting limits. That data drove our IP blocking decisions.
 
-## Request Signing: Authenticating Intent, Not Just Identity
+## Request Signing: The Second Layer
 
-Rate limiting tells you *how much* a client is asking. Request signing tells you *whether the client is who they claim to be* — and whether the request was tampered with in transit. For a financial platform where every API call could move money, this distinction was critical.
+Rate limiting handles volume. **Request signing** handles integrity. The attack that worried me most wasn't brute force — it was replay attacks where someone intercepted a legitimate API call and re-submitted it with a tampered payload.
 
-We implemented HMAC-based request signing where every client received a secret key, and every request had to include a signature computed over the request body, timestamp, and URI:
+I implemented HMAC-based request signing where each client computes a signature over the request body, timestamp, and a shared secret. The server independently computes the same signature and rejects mismatches.
 
 ```typescript
 import crypto from 'crypto';
 
-interface SignedRequestHeaders {
-  'x-signature': string;
-  'x-timestamp': string;
-  'x-client-id': string;
+interface SignedRequest {
+  body: string;
+  timestamp: number;
+  signature: string;
 }
 
-function generateSignature(
-  clientSecret: string,
-  method: string,
-  path: string,
-  timestamp: string,
-  body: string
-): string {
-  const payload = `${method}\n${path}\n${timestamp}\n${body}`;
-  return crypto
-    .createHmac('sha256', clientSecret)
-    .update(payload)
-    .digest('hex');
-}
-
-function verifyRequest(
-  headers: SignedRequestHeaders,
-  method: string,
-  path: string,
-  body: string,
-  getSecret: (clientId: string) => string
+export function verifyRequestSignature(
+  payload: SignedRequest,
+  secret: string,
+  maxAgeMs: number = 300_000 // 5 minutes
 ): boolean {
-  const { 'x-signature': signature, 'x-timestamp': timestamp, 'x-client-id': clientId } = headers;
+  // Reject stale requests to prevent replay attacks
+  const age = Date.now() - payload.timestamp;
+  if (age > maxAgeMs || age < 0) {
+    return false;
+  }
 
-  // Reject requests older than 5 minutes to prevent replay attacks
-  const requestAge = Date.now() - parseInt(timestamp, 10);
-  if (requestAge > 5 * 60 * 1000) return false;
-
-  const expectedSignature = generateSignature(
-    getSecret(clientId),
-    method,
-    path,
-    timestamp,
-    body
-  );
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(`${payload.timestamp}.${payload.body}`)
+    .digest('hex');
 
   return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
+    Buffer.from(payload.signature, 'hex'),
+    Buffer.from(expectedSignature, 'hex')
   );
 }
 ```
 
-Two details matter here. First, the **timestamp check** prevents replay attacks — an attacker can't capture a valid signed request and reuse it hours later. Second, `crypto.timingSafeEqual` prevents timing-based side-channel attacks where an attacker could deduce correct signature bytes by measuring response times.
+A few details that matter here:
 
-## Tying It Together: The Middleware Stack
+- **Timestamp validation** with a 5-minute window kills replay attacks while tolerating reasonable clock drift
+- **`crypto.timingSafeEqual`** prevents timing-based side-channel attacks on signature comparison
+- **Concatenating timestamp with body** ensures an attacker can't reuse a valid signature with a different payload
 
-In production, these controls composed into a middleware pipeline that ran before any business logic. The order was deliberate: **IP blocklist → request signing verification → rate limiting → handler**. We checked the blocklist first because it's the cheapest operation — a single Redis `SISMEMBER` call. Signature verification came next to reject forged requests before they consumed rate limit quota. Only authenticated, non-blocked requests counted against rate limits.
+## Connecting Controls to Incident Response
+
+Implementing these controls was only half the battle. The other half was making them **operationally visible**. We integrated rate limit violations and signature failures into our alerting pipeline using NewRelic. Here's what that looked like in practice:
 
 ```typescript
-// Express middleware composition
-app.use('/api/v1',
-  ipBlocklistMiddleware,     // O(1) Redis lookup
-  requestSigningMiddleware,  // HMAC verification
-  rateLimitMiddleware({      // Sliding window check
-    tiers: {
-      default: { max: 100, windowMs: 60_000 },
-      sensitive: { max: 10, windowMs: 60_000 },
-      otp: { max: 3, windowMs: 60_000 },
-    }
-  }),
-  router
-);
+import newrelic from 'newrelic';
+
+export function recordSecurityEvent(
+  eventType: 'RATE_LIMIT_HIT' | 'SIGNATURE_INVALID' | 'REPLAY_DETECTED',
+  metadata: Record<string, string | number>
+) {
+  newrelic.recordCustomEvent('SecurityControl', {
+    eventType,
+    ...metadata,
+    timestamp: Date.now(),
+  });
+
+  // Escalate if threshold breached in rolling window
+  if (eventType === 'SIGNATURE_INVALID') {
+    newrelic.noticeError(new Error(`Security: ${eventType}`), metadata);
+  }
+}
 ```
 
-This ordering prevented a subtle bug we hit early on: without signature verification before rate limiting, attackers could exhaust a legitimate user's rate limit by forging requests with their client ID.
+We set alert thresholds that correlated with our SLOs. A spike in `RATE_LIMIT_HIT` events beyond 2x baseline triggered a P2 alert. Any `SIGNATURE_INVALID` event on a critical payment endpoint triggered a P1. This turned our security controls into **reliability signals** — exactly where SRE and security intersect.
 
-## Measuring the Impact
+## The Results
 
-After deploying these controls, the numbers told the story. We integrated the middleware metrics into our monitoring stack and tracked three key indicators:
+Within 60 days of deploying these controls:
 
-- **Blocked abusive requests**: 23% of all inbound traffic was identified and rejected as automated abuse — traffic that previously consumed compute and degraded latency for real users.
-- **Critical production anomalies**: Dropped by **65%** over the following quarter, measured through our APM tooling. The reduction came primarily from eliminating cascading failures triggered by abuse-driven resource exhaustion.
-- **Platform uptime**: Stabilized at **99.9%** as measured over a rolling 90-day window, up from roughly 99.2% before the controls were in place.
+- **Critical production anomalies dropped by 65%** — most of what we'd been treating as "performance issues" was actually abusive traffic consuming backend capacity
+- **Zero successful replay attacks** post-implementation, down from 3-4 suspected incidents per month
+- **IP blocking became data-driven** — rate limit dashboards gave us clear evidence to justify blocking decisions, replacing the previous approach of reactive manual investigation
+- **On-call burden decreased measurably** — fewer false-positive performance alerts meant our MTTR improved because engineers were responding to real incidents, not abuse-induced noise
 
-The most surprising insight was that rate limiting improved our **p99 latency** by 40ms. By shedding abusive traffic early in the middleware stack, we freed connection pool slots and event loop capacity for legitimate requests.
+> The biggest lesson: abuse traffic doesn't always look like an attack. Sometimes it looks like "the system is slow today." Rate limiting and request signing gave us the instrumentation to tell the difference.
 
 ## Key Takeaways
 
-1. **Rate limiting is an SRE primitive, not just a security feature.** If your uptime SLO doesn't account for abuse traffic, you're measuring availability under ideal conditions that production will never give you.
+1. **Treat abuse mitigation as an SRE problem, not just a security problem.** Abusive traffic erodes your error budget the same way a bug does. Your rate limiting thresholds should be derived from your SLOs.
 
-2. **Layer your limits by sensitivity.** A single global rate limit is a blunt instrument. Tier your endpoints — read operations can tolerate higher throughput, but sensitive mutations need tight caps.
+2. **Tier your rate limits by blast radius.** Not every endpoint needs the same protection. Critical transaction paths need aggressive limits; read-heavy endpoints can be more permissive.
 
-3. **Request signing prevents quota theft.** Without verifying *who* is making a request before counting it, attackers can weaponize your own rate limiter against legitimate users.
+3. **Request signing prevents a class of attacks that rate limiting can't.** Volume controls and integrity controls are complementary — you need both.
 
-4. **Middleware order matters.** Cheapest checks first, most expensive last. Blocklist → signing → rate limit → handler. Getting this wrong creates subtle vulnerabilities and wastes compute.
+4. **Make your security controls observable.** If a rate limit fires and nobody sees it, it's not an SRE control — it's a hope. Pipe every violation into your monitoring stack and set alert thresholds tied to your SLOs.
 
-5. **Measure the reliability impact, not just the security impact.** Track how abuse mitigation affects your p99 latency, error rates, and connection pool utilization — the SRE metrics that matter for user experience.
-
-These controls aren't glamorous. They don't show up in feature demos or sprint reviews. But when your platform is serving hundreds of thousands of users in a regulated financial environment, the difference between 99.2% and 99.9% uptime is the difference between a platform users trust and one they abandon.
+5. **Let the data drive your response.** IP blocking, progressive backoff, and escalation paths should all be informed by the telemetry your controls produce, not gut feelings.
