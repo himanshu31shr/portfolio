@@ -252,10 +252,9 @@ export const stats = [
 ] as const
 
 export const navLinks = [
+  { label: 'Writing', href: '/blog' },
   { label: 'About', href: '#about' },
   { label: 'Experience', href: '#experience' },
-  { label: 'Skills', href: '#skills' },
   { label: 'Projects', href: '#projects' },
-  { label: 'Blog', href: '/blog' },
   { label: 'Contact', href: '#contact' },
 ] as const

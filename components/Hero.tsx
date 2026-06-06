@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { ChevronDown, Download, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
+import { ChevronDown, Download, ExternalLink, BookOpen } from 'lucide-react'
 import { personalInfo } from '@/lib/constants'
+import type { PostMeta } from '@/lib/blog'
 
 const ROLES = [
   'Senior Full Stack Engineer',
@@ -13,7 +15,7 @@ const ROLES = [
   'WCAG 2.1 AA Champion',
 ]
 
-export function Hero() {
+export function Hero({ latestPost }: { latestPost?: PostMeta | null }) {
   const [roleIndex, setRoleIndex] = useState(0)
   const [displayText, setDisplayText] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
@@ -130,7 +132,30 @@ export function Hero() {
           LinkedIn
           <ExternalLink className="w-4 h-4" aria-hidden="true" />
         </a>
+        <Link
+          href="/blog"
+          className="btn-outline flex items-center gap-2"
+          aria-label="Read my writing"
+        >
+          Read My Writing
+          <BookOpen className="w-4 h-4" aria-hidden="true" />
+        </Link>
       </div>
+
+      {/* Latest article pill */}
+      {latestPost && (
+        <Link
+          href={`/blog/${latestPost.slug}`}
+          className="mb-16 inline-flex items-center gap-2 glass px-4 py-2 text-sm text-text-secondary hover:text-accent-blue hover:border-accent-blue/50 transition-all group"
+          aria-label={`Latest article: ${latestPost.title}`}
+        >
+          <span className="text-accent-purple font-mono text-xs uppercase tracking-wider">Latest</span>
+          <span className="w-px h-3 bg-glass-border" aria-hidden="true" />
+          <span className="group-hover:text-accent-blue transition-colors truncate max-w-[280px] md:max-w-[400px]">
+            {latestPost.title}
+          </span>
+        </Link>
+      )}
 
       {/* Scroll indicator */}
       <button

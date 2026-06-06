@@ -12,6 +12,12 @@ describe('Hero', () => {
     expect(screen.getByRole('heading', { level: 1, name: /Himanshu Shrivastava/i })).toBeInTheDocument()
   })
 
+  it('renders latest post link if provided', () => {
+    const mockPost = { slug: 'test', title: 'Test Post' } as unknown as import('@/lib/blog').PostMeta
+    render(<Hero latestPost={mockPost} />)
+    expect(screen.getByRole('link', { name: /Latest article: Test Post/i })).toBeInTheDocument()
+  })
+
   it('renders the hero section with aria-label', () => {
     render(<Hero />)
     expect(screen.getByRole('region', { name: /hero section/i })).toBeInTheDocument()
@@ -113,5 +119,9 @@ describe('Hero', () => {
     })
     expect(screen.getByLabelText('Current role: S')).toBeInTheDocument()
   })
-})
 
+  it('renders without latest post', () => {
+    render(<Hero latestPost={undefined} />)
+    expect(screen.queryByText(/latest article/i)).not.toBeInTheDocument()
+  })
+})

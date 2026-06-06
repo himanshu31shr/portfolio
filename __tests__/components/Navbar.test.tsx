@@ -21,10 +21,9 @@ describe('Navbar', () => {
     expect(aboutLink.length).toBeGreaterThan(0)
   })
 
-  it('renders a Blog link', () => {
+  it('renders a Writing link', () => {
     render(<Navbar />)
-    const blogLinks = screen.getAllByRole('link', { name: /blog/i })
-    expect(blogLinks.length).toBeGreaterThan(0)
+    expect(screen.getByRole('link', { name: /writing/i })).toBeInTheDocument()
   })
 
   it('renders mobile menu toggle button', () => {
@@ -104,13 +103,14 @@ describe('Navbar', () => {
     
     render(<Navbar />)
     
-    // About link should not be present (it uses href="#about")
-    const aboutLinks = screen.queryAllByRole('link', { name: /about/i })
-    expect(aboutLinks.length).toBe(0)
-    
-    // Blog link should still be present
-    const blogLinks = screen.getAllByRole('link', { name: /blog/i })
-    expect(blogLinks.length).toBeGreaterThan(0)
+    // Should not render hash links
+    expect(screen.queryByRole('link', { name: /about/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /experience/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /projects/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /contact/i })).not.toBeInTheDocument()
+
+    // Should still render Writing link
+    expect(screen.getByRole('link', { name: /writing/i })).toBeInTheDocument()
     vi.mocked(usePathname).mockRestore()
   })
 

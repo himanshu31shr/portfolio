@@ -25,6 +25,8 @@ tags: ["nextjs", "test"]
 readTime: "5 min read"
 coverImage: "/images/blog/test.jpg"
 published: true
+series: "Test Series"
+seriesOrder: 1
 ---
 
 # Test Post Content
@@ -38,6 +40,8 @@ tags: ["draft"]
 readTime: "3 min read"
 coverImage: "/images/blog/draft.jpg"
 published: false
+series: ""
+seriesOrder: 0
 ---
 
 # Draft Content
@@ -51,6 +55,8 @@ tags: ["aws"]
 readTime: "7 min read"
 coverImage: "/images/blog/older.jpg"
 published: true
+series: "Test Series"
+seriesOrder: 2
 ---
 
 # Older Content
@@ -119,6 +125,8 @@ describe('blog utilities', () => {
       expect(post.readTime).toBe('5 min read')
       expect(post.coverImage).toBe('/images/blog/test.jpg')
       expect(post.published).toBe(true)
+      expect(post.series).toBe('Test Series')
+      expect(post.seriesOrder).toBe(1)
     })
 
     it('filters out non-mdx files', async () => {
@@ -151,6 +159,8 @@ Content`
       expect(posts[0].readTime).toBe('')
       expect(posts[0].coverImage).toBe('')
       expect(posts[0].published).toBe(true)
+      expect(posts[0].series).toBe('')
+      expect(posts[0].seriesOrder).toBe(0)
     })
 
     it('handles sorting when posts are in different initial readdirSync orders', async () => {
@@ -222,6 +232,8 @@ Content
       expect(result?.meta.tags).toEqual([])
       expect(result?.meta.readTime).toBe('')
       expect(result?.meta.coverImage).toBe('')
+      expect(result?.meta.series).toBe('')
+      expect(result?.meta.seriesOrder).toBe(0)
     })
 
     it('sets all defaults when frontmatter is completely empty', async () => {
@@ -241,6 +253,8 @@ Content`
       expect(result?.meta.readTime).toBe('')
       expect(result?.meta.coverImage).toBe('')
       expect(result?.meta.published).toBe(false)
+      expect(result?.meta.series).toBe('')
+      expect(result?.meta.seriesOrder).toBe(0)
     })
   })
 
@@ -262,6 +276,145 @@ Content`
       expect(slugs).toContain('another-post')
       expect(slugs).not.toContain('.DS_Store')
       expect(slugs).toHaveLength(2)
+    })
+  })
+
+  describe('getLatestPost', () => {
+    it('returns null when no posts', async () => {
+      mockExistsSync.mockReturnValue(false)
+      const { getLatestPost } = await import('@/lib/blog')
+      expect(getLatestPost()).toBeNull()
+    })
+
+    it('returns the most recent published post', async () => {
+      mockExistsSync.mockReturnValue(true)
+      mockReaddirSync.mockReturnValue(['older.mdx', 'test.mdx'])
+      mockReadFileSync.mockImplementation((p: string) => {
+        if (String(p).includes('older')) return MOCK_MDX_OLDER
+        return MOCK_MDX_PUBLISHED
+      })
+
+      const { getLatestPost } = await import('@/lib/blog')
+      const latest = getLatestPost()
+      
+      expect(latest).not.toBeNull()
+      expect(latest?.title).toBe('Test Post') // Newer date
+    })
+  })
+
+  describe('getPostsByTag', () => {
+    it('returns empty array when no posts match', async () => {
+      mockExistsSync.mockReturnValue(true)
+      mockReaddirSync.mockReturnValue(['test.mdx'])
+      mockReadFileSync.mockReturnValue(MOCK_MDX_PUBLISHED)
+      
+      const { getPostsByTag } = await import('@/lib/blog')
+      expect(getPostsByTag('nonexistent')).toEqual([])
+    })
+
+    it('returns matching posts', async () => {
+      mockExistsSync.mockReturnValue(true)
+      mockReaddirSync.mockReturnValue(['older.mdx', 'test.mdx'])
+      mockReadFileSync.mockImplementation((p: string) => {
+        if (String(p).includes('older')) return MOCK_MDX_OLDER
+        return MOCK_MDX_PUBLISHED
+      })
+      
+      const { getPostsByTag } = await import('@/lib/blog')
+      
+      const awsPosts = getPostsByTag('aws')
+      expect(awsPosts).toHaveLength(1)
+      expect(awsPosts[0].title).toBe('Older Post')
+      
+      const nextPosts = getPostsByTag('nextjs')
+      expect(nextPosts).toHaveLength(1)
+      expect(nextPosts[0].title).toBe('Test Post')
+    })
+  })
+
+  describe('getAllTags', () => {
+    it('returns unique sorted tags from all published posts', async () => {
+      mockExistsSync.mockReturnValue(true)
+      mockReaddirSync.mockReturnValue(['older.mdx', 'test.mdx'])
+      mockReadFileSync.mockImplementation((p: string) => {
+        if (String(p).includes('older')) return MOCK_MDX_OLDER
+        return MOCK_MDX_PUBLISHED
+      })
+      
+      const { getAllTags } = await import('@/lib/blog')
+      const tags = getAllTags()
+      
+      // Expected: ['aws'] from older, ['nextjs', 'test'] from test
+      expect(tags).toEqual(['aws', 'nextjs', 'test']) // Sorted alphabetically
+    })
+  })
+
+  describe('getRelatedPosts', () => {
+    it('returns related posts sorted by matching tag count', async () => {
+      const MOCK_A = `---
+title: "Post A"
+published: true
+tags: ["react", "nextjs", "typescript"]
+---`
+      const MOCK_B = `---
+title: "Post B"
+published: true
+tags: ["react", "nextjs"]
+---`
+      const MOCK_C = `---
+title: "Post C"
+published: true
+tags: ["react"]
+---`
+      const MOCK_D = `---
+title: "Post D"
+published: true
+tags: ["aws"]
+---`
+
+      mockExistsSync.mockReturnValue(true)
+      mockReaddirSync.mockReturnValue(['a.mdx', 'b.mdx', 'c.mdx', 'd.mdx'])
+      mockReadFileSync.mockImplementation((p: string) => {
+        if (String(p).includes('a.mdx')) return MOCK_A
+        if (String(p).includes('b.mdx')) return MOCK_B
+        if (String(p).includes('c.mdx')) return MOCK_C
+        return MOCK_D
+      })
+
+      const { getRelatedPosts } = await import('@/lib/blog')
+      
+      // Post A shares 2 tags with B, 1 with C, 0 with D
+      const related = getRelatedPosts('a', ['react', 'nextjs', 'typescript'], 2)
+      
+      expect(related).toHaveLength(2)
+      expect(related[0].title).toBe('Post B') // 2 matches
+      expect(related[1].title).toBe('Post C') // 1 match
+      
+      // It should exclude the current post
+      expect(related.find(p => p.slug === 'a')).toBeUndefined()
+    })
+  })
+
+  describe('getPostsInSeries', () => {
+    it('returns empty array if no series name provided', async () => {
+      const { getPostsInSeries } = await import('@/lib/blog')
+      expect(getPostsInSeries('')).toEqual([])
+    })
+
+    it('returns posts in the given series sorted by seriesOrder', async () => {
+      mockExistsSync.mockReturnValue(true)
+      mockReaddirSync.mockReturnValue(['older.mdx', 'test.mdx'])
+      mockReadFileSync.mockImplementation((p: string) => {
+        if (String(p).includes('older')) return MOCK_MDX_OLDER // Order 2
+        return MOCK_MDX_PUBLISHED // Order 1
+      })
+
+      const { getPostsInSeries } = await import('@/lib/blog')
+      const seriesPosts = getPostsInSeries('Test Series')
+      
+      expect(seriesPosts).toHaveLength(2)
+      expect(seriesPosts[0].title).toBe('Test Post') // Order 1
+      expect(seriesPosts[1].title).toBe('Older Post') // Order 2
     })
   })
 })

@@ -1,0 +1,107 @@
+---
+title: "The Tech Lead's New Job: Directing AI Agents Across 3 Workstreams"
+date: "2026-06-05"
+excerpt: "The role of tech lead has fundamentally shifted from writing code to orchestrating AI agents. Here's my framework for managing three concurrent engineering workstreams with AI teammates that never sleep."
+tags: ["engineering-leadership", "ai-engineering", "tech-lead", "productivity", "agentic-workflows"]
+readTime: "4 min read"
+coverImage: "/images/blog/the-tech-lead-s-new-job-directing-ai-agents-across-3-workstr.png"
+published: true
+---
+
+Six months ago, I took on responsibility for three concurrent engineering workstreams at an enterprise consultancy. One client needed an MVP shipped in eight weeks. Another required quarterly roadmap features. The third demanded platform stability improvements that couldn't wait. Traditional tech lead math said this was impossible without burning out the team—or myself.
+
+Then I changed how I thought about the job.
+
+## The Shift from Coder to Orchestrator
+
+The industry conversation has shifted dramatically. Anthropic's 2026 report puts it plainly: engineers who once wrote every line of code now increasingly orchestrate agents that write code for them. But what does "orchestration" actually look like when you're juggling multiple client engagements, each with different codebases, tech stacks, and delivery timelines?
+
+For me, it meant redefining what a "productive day" looks like. I stopped measuring output by commits I personally authored. Instead, I started tracking **decisions made**, **reviews completed**, and **blockers cleared**—the activities that actually move workstreams forward.
+
+The AI agents handle implementation. I handle direction.
+
+## The Context-Switching Tax (and How Agents Pay It)
+
+Context-switching is the silent killer of tech lead productivity. Research suggests it takes 23 minutes to regain focus after an interruption. When you're managing three workstreams, you're not just switching contexts—you're rebuilding mental models of different architectures, different business domains, and different team dynamics multiple times per day.
+
+Here's what changed: I now **front-load context into agent prompts** rather than keeping it in my head. Each workstream has a persistent context document that I update weekly:
+
+```markdown
+## Workstream: Client A - Payment Processing MVP
+
+### Current Sprint Goal
+Integrate Stripe webhooks with idempotency handling
+
+### Architecture Decisions Made
+- Event sourcing for payment state (ADR-004)
+- Redis for idempotency keys, 24hr TTL
+- Dead letter queue for failed webhooks
+
+### Known Constraints
+- No breaking changes to /api/v1/* endpoints
+- PCI compliance: no raw card data in logs
+- Must support replay from t-7 days
+```
+
+When I spin up an agent task, this context goes in first. The agent doesn't need me to re-explain why we chose event sourcing—it's in the document. My mental overhead drops to zero.
+
+## Structuring Agent Tasks for Parallel Execution
+
+The key insight is that agents can work in parallel across workstreams while I sleep, commute, or focus on the one workstream that needs human judgment. But this only works if tasks are **well-scoped and independently verifiable**.
+
+I use a simple task template that's saved me from countless "AI slop" situations:
+
+```yaml
+task: "Implement webhook signature verification for Stripe events"
+workstream: "client-a-payments"
+context_doc: "./docs/workstream-a-context.md"
+constraints:
+  - Must use existing `validateSignature` utility pattern
+  - Add tests covering valid, expired, and malformed signatures
+  - No new dependencies without approval comment
+acceptance_criteria:
+  - Signature validation fails gracefully with 400 response
+  - All three test cases pass
+  - No TypeScript errors introduced
+review_flags:
+  - "SECURITY_REVIEW" if touching auth logic
+  - "PERF_REVIEW" if adding database calls
+```
+
+The `constraints` and `acceptance_criteria` sections are non-negotiable. Without them, agents produce code that technically works but doesn't fit the system. With them, I can review a PR in minutes instead of hours.
+
+## The Morning Review Ritual
+
+Every morning starts the same way. I have 45 minutes before standups begin, and I use them exclusively for reviewing what agents shipped overnight.
+
+My review checklist has evolved through trial and error:
+
+```bash
+# Morning review script - runs before coffee
+gh pr list --author="app/agentic-ci" --state=open --json number,title,additions,deletions | \
+  jq '.[] | select(.additions + .deletions > 100) | {number, title, changes: (.additions + .deletions)}'
+```
+
+Any PR over 100 lines of change gets manual review. Under 100, I trust the automated test suite and linting to catch issues—but I still skim the diff. The goal isn't to rubber-stamp; it's to **focus human attention where it matters most**.
+
+The pattern I watch for: agents excel at implementing well-defined features but struggle with **cross-cutting concerns**. If a PR touches authentication, caching, or error handling, I slow down. Those are the areas where "looks correct" and "is correct" diverge.
+
+## Protecting Deep Work While Staying Responsive
+
+The hardest part of managing three workstreams isn't the volume—it's protecting the time for architectural thinking. Agents handle implementation, but someone still needs to decide *what* to implement and *why*.
+
+I've settled on a rhythm: **two hours of protected time daily** for design work, documentation, and strategic decisions. During this window, Slack goes to DND, agents run autonomously, and I work on the problems that require human judgment—like negotiating scope with product managers or designing the interface between two services.
+
+The counter-intuitive lesson: **giving agents more autonomy freed up time for higher-leverage work**. I spent less time writing CRUD endpoints and more time ensuring the architecture would support next quarter's features.
+
+## Key Takeaways
+
+Managing multiple workstreams with AI agents isn't about working faster—it's about working differently:
+
+- **Front-load context into documents**, not your memory. Agents can't read your mind, but they can read markdown.
+- **Scope tasks tightly** with explicit constraints and acceptance criteria. Ambiguity produces AI slop.
+- **Review by risk, not by volume**. A 10-line auth change deserves more scrutiny than a 200-line CRUD feature.
+- **Protect time for human-only work**. Architecture, negotiation, and strategic decisions don't parallelize.
+- **Measure outcomes, not keystrokes**. Your job is decisions made and blockers cleared, not lines committed.
+
+The tech lead role hasn't disappeared—it's elevated. We're no longer the fastest coders on the team. We're the ones who ensure the AI-generated code actually solves the right problems.

@@ -184,8 +184,8 @@ describe('navLinks', () => {
     })
   })
 
-  it('contains a Blog link', () => {
-    const blogLink = navLinks.find((l) => l.label === 'Blog')
+  it('contains a Writing link', () => {
+    const blogLink = navLinks.find((l) => l.label === 'Writing')
     expect(blogLink).toBeDefined()
     expect(blogLink?.href).toBe('/blog')
   })

@@ -2,6 +2,9 @@ import '@testing-library/jest-dom/vitest'
 import React from 'react'
 import { vi } from 'vitest'
 
+// Mock env variables
+process.env.NEXT_PUBLIC_BASE_PATH = ''
+
 // Mock next/font/google - always returns className and style
 vi.mock('next/font/google', () => ({
   Inter: () => ({ className: 'mock-inter', style: { fontFamily: 'Inter' } }),
@@ -56,3 +59,12 @@ vi.mock('framer-motion', () => {
     useSpring: (value: number) => value,
   }
 })
+
+// Mock IntersectionObserver globally
+const MockIntersectionObserver = class {
+  constructor() {}
+  observe = vi.fn()
+  unobserve = vi.fn()
+  disconnect = vi.fn()
+}
+vi.stubGlobal('IntersectionObserver', MockIntersectionObserver)
