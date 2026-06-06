@@ -6,24 +6,25 @@ import { GlassCard } from './GlassCard'
 import { SectionHeading } from './SectionHeading'
 import { ScrollReveal } from './ScrollReveal'
 
-export function BlogPreview() {
-  const posts = getAllPosts().slice(0, 3)
+export function LatestPosts() {
+  // Skip the first post (featured), show up to 6
+  const posts = getAllPosts().slice(1, 7)
 
   if (posts.length === 0) {
     return null
   }
 
   return (
-    <section id="blog-preview" className="section" aria-labelledby="blog-preview-heading">
+    <section id="latest-posts" className="section" aria-labelledby="latest-posts-heading">
       <SectionHeading
-        title="From the Blog"
+        title="Latest Writing"
         subtitle="Engineering insights from 9+ years of building at scale."
-        id="blog-preview-heading"
+        id="latest-posts-heading"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {posts.map((post, index) => (
-          <ScrollReveal key={post.slug} delay={index * 0.12}>
+          <ScrollReveal key={post.slug} delay={index * 0.1}>
             <Link
               href={`/blog/${post.slug}`}
               className="block h-full group"
@@ -86,14 +87,14 @@ export function BlogPreview() {
         ))}
       </div>
 
-      {/* View all posts CTA */}
+      {/* View archive CTA */}
       <ScrollReveal className="text-center">
         <Link
           href="/blog"
           className="btn-outline inline-flex items-center gap-2"
           aria-label="View all blog posts"
         >
-          View All Posts
+          View Archive
           <ArrowRight className="w-4 h-4" aria-hidden="true" />
         </Link>
       </ScrollReveal>

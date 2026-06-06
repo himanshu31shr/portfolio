@@ -240,6 +240,51 @@
   .glow-purple {
     box-shadow: 0 0 20px var(--color-glow-purple);
   }
+
+  /* --- Featured post card with gradient border --- */
+  .featured-card {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-accent-blue) 40%, transparent),
+      color-mix(in srgb, var(--color-accent-purple) 40%, transparent),
+      color-mix(in srgb, var(--color-accent-pink) 40%, transparent)
+    );
+    background-size: 200% 200%;
+    animation: gradient-shift 6s ease infinite;
+    border-radius: var(--radius-glass-lg);
+    transition: box-shadow var(--duration-normal) ease;
+  }
+
+  .featured-card:hover {
+    box-shadow:
+      0 0 30px var(--color-glow-blue),
+      0 0 60px var(--color-glow-purple);
+  }
+
+  /* --- Table of contents active item --- */
+  .toc-active {
+    color: var(--color-accent-blue);
+    border-left-color: var(--color-accent-blue);
+    font-weight: 600;
+  }
+
+  /* --- Share button --- */
+  .share-btn {
+    @apply text-text-secondary text-sm px-3 py-2;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border-radius: 0.5rem;
+    background: var(--color-glass);
+    border: 1px solid var(--color-glass-border);
+    transition: all var(--duration-fast) ease;
+  }
+
+  .share-btn:hover {
+    color: var(--color-accent-blue);
+    border-color: color-mix(in srgb, var(--color-accent-blue) 50%, transparent);
+    background: color-mix(in srgb, var(--color-accent-blue) 8%, transparent);
+  }
 }
 
 /* =============================

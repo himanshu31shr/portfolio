@@ -5,7 +5,8 @@ import { describe, it, expect, vi } from 'vitest'
 vi.mock('@/lib/blog', () => ({
   getPostBySlug: vi.fn(),
   getPostSlugs: vi.fn(),
-  getAllPosts: vi.fn(),
+  getRelatedPosts: vi.fn(),
+  getPostsInSeries: vi.fn(),
 }))
 
 // Mock next-mdx-remote/rsc
@@ -46,6 +47,8 @@ const MOCK_POST = {
     readTime: '5 min read',
     coverImage: '/images/blog/test.jpg',
     published: true,
+    series: '',
+    seriesOrder: 0,
   },
   content: '# Test Content\n\nThis is the post body.',
 }
@@ -58,15 +61,18 @@ const MOCK_RELATED = [
     excerpt: 'Related excerpt',
     tags: ['related'],
     readTime: '3 min read',
-    coverImage: '',
+    coverImage: '/images/related.jpg',
     published: true,
+    series: '',
+    seriesOrder: 0,
   },
 ]
 
 describe('BlogPostPage', () => {
   it('renders the post title', async () => {
     mockBlog.getPostBySlug.mockReturnValue(MOCK_POST)
-    mockBlog.getAllPosts.mockReturnValue(MOCK_RELATED)
+    mockBlog.getRelatedPosts.mockReturnValue(MOCK_RELATED)
+    mockBlog.getPostsInSeries.mockReturnValue([])
     mockBlog.getPostSlugs.mockReturnValue(['test-post'])
 
     const { default: BlogPostPage } = await import('@/app/blog/[slug]/page')
@@ -77,7 +83,8 @@ describe('BlogPostPage', () => {
 
   it('renders the MDX content', async () => {
     mockBlog.getPostBySlug.mockReturnValue(MOCK_POST)
-    mockBlog.getAllPosts.mockReturnValue(MOCK_RELATED)
+    mockBlog.getRelatedPosts.mockReturnValue(MOCK_RELATED)
+    mockBlog.getPostsInSeries.mockReturnValue([])
 
     const { default: BlogPostPage } = await import('@/app/blog/[slug]/page')
     render(await BlogPostPage({ params: Promise.resolve({ slug: 'test-post' }) }))
@@ -87,7 +94,8 @@ describe('BlogPostPage', () => {
 
   it('renders the post tags', async () => {
     mockBlog.getPostBySlug.mockReturnValue(MOCK_POST)
-    mockBlog.getAllPosts.mockReturnValue([])
+    mockBlog.getRelatedPosts.mockReturnValue([])
+    mockBlog.getPostsInSeries.mockReturnValue([])
 
     const { default: BlogPostPage } = await import('@/app/blog/[slug]/page')
     render(await BlogPostPage({ params: Promise.resolve({ slug: 'test-post' }) }))
@@ -98,7 +106,8 @@ describe('BlogPostPage', () => {
 
   it('renders the read time', async () => {
     mockBlog.getPostBySlug.mockReturnValue(MOCK_POST)
-    mockBlog.getAllPosts.mockReturnValue([])
+    mockBlog.getRelatedPosts.mockReturnValue([])
+    mockBlog.getPostsInSeries.mockReturnValue([])
 
     const { default: BlogPostPage } = await import('@/app/blog/[slug]/page')
     render(await BlogPostPage({ params: Promise.resolve({ slug: 'test-post' }) }))
@@ -108,7 +117,8 @@ describe('BlogPostPage', () => {
 
   it('renders back to all posts link', async () => {
     mockBlog.getPostBySlug.mockReturnValue(MOCK_POST)
-    mockBlog.getAllPosts.mockReturnValue([])
+    mockBlog.getRelatedPosts.mockReturnValue([])
+    mockBlog.getPostsInSeries.mockReturnValue([])
 
     const { default: BlogPostPage } = await import('@/app/blog/[slug]/page')
     render(await BlogPostPage({ params: Promise.resolve({ slug: 'test-post' }) }))
@@ -118,7 +128,8 @@ describe('BlogPostPage', () => {
 
   it('renders cover image when provided', async () => {
     mockBlog.getPostBySlug.mockReturnValue(MOCK_POST)
-    mockBlog.getAllPosts.mockReturnValue([])
+    mockBlog.getRelatedPosts.mockReturnValue([])
+    mockBlog.getPostsInSeries.mockReturnValue([])
 
     const { default: BlogPostPage } = await import('@/app/blog/[slug]/page')
     render(await BlogPostPage({ params: Promise.resolve({ slug: 'test-post' }) }))
@@ -126,15 +137,31 @@ describe('BlogPostPage', () => {
     expect(screen.getByAltText(/cover image for my test post/i)).toBeInTheDocument()
   })
 
+  it('renders without cover image when not provided', async () => {
+    const postWithoutCover = {
+      ...MOCK_POST,
+      meta: { ...MOCK_POST.meta, coverImage: '' },
+    }
+    mockBlog.getPostBySlug.mockReturnValue(postWithoutCover)
+    mockBlog.getRelatedPosts.mockReturnValue([])
+    mockBlog.getPostsInSeries.mockReturnValue([])
+
+    const { default: BlogPostPage } = await import('@/app/blog/[slug]/page')
+    render(await BlogPostPage({ params: Promise.resolve({ slug: 'test-post' }) }))
+
+    expect(screen.queryByAltText(/cover image for my test post/i)).not.toBeInTheDocument()
+  })
+
   it('renders related posts when available', async () => {
     mockBlog.getPostBySlug.mockReturnValue(MOCK_POST)
-    mockBlog.getAllPosts.mockReturnValue(MOCK_RELATED)
+    mockBlog.getRelatedPosts.mockReturnValue(MOCK_RELATED)
+    mockBlog.getPostsInSeries.mockReturnValue([])
 
     const { default: BlogPostPage } = await import('@/app/blog/[slug]/page')
     render(await BlogPostPage({ params: Promise.resolve({ slug: 'test-post' }) }))
 
     expect(screen.getByRole('region', { name: /related posts/i })).toBeInTheDocument()
-    expect(screen.getByText('Related Post')).toBeInTheDocument()
+    expect(screen.getAllByText('Related Post')[0]).toBeInTheDocument()
   })
 
   it('calls notFound when post does not exist', async () => {
@@ -172,7 +199,8 @@ describe('BlogPostPage', () => {
 
   it('renders custom image elements inside MDXRemote with correct paths', async () => {
     mockBlog.getPostBySlug.mockReturnValue(MOCK_POST)
-    mockBlog.getAllPosts.mockReturnValue([])
+    mockBlog.getRelatedPosts.mockReturnValue([])
+    mockBlog.getPostsInSeries.mockReturnValue([])
 
     // Set process.env.NEXT_PUBLIC_BASE_PATH to test the base path logic
     const originalBasePath = process.env.NEXT_PUBLIC_BASE_PATH
@@ -215,5 +243,50 @@ describe('BlogPostPage', () => {
     const metadata = await generateMetadata({ params: Promise.resolve({ slug: 'test-post' }) })
     expect(metadata.openGraph?.images).toEqual([])
   })
-})
 
+  it('renders author card at the bottom', async () => {
+    mockBlog.getPostBySlug.mockReturnValue(MOCK_POST)
+    mockBlog.getRelatedPosts.mockReturnValue([])
+    mockBlog.getPostsInSeries.mockReturnValue([])
+
+    const { default: BlogPostPage } = await import('@/app/blog/[slug]/page')
+    render(await BlogPostPage({ params: Promise.resolve({ slug: 'test-post' }) }))
+
+    // AuthorCard renders the author name
+    expect(screen.getByText('Himanshu Shrivastava')).toBeInTheDocument()
+  })
+
+  it('renders share bar', async () => {
+    mockBlog.getPostBySlug.mockReturnValue(MOCK_POST)
+    mockBlog.getRelatedPosts.mockReturnValue([])
+    mockBlog.getPostsInSeries.mockReturnValue([])
+
+    const { default: BlogPostPage } = await import('@/app/blog/[slug]/page')
+    render(await BlogPostPage({ params: Promise.resolve({ slug: 'test-post' }) }))
+
+    expect(screen.getByRole('link', { name: /share on twitter/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /share on linkedin/i })).toBeInTheDocument()
+  })
+
+  it('renders series navigation when post is part of a series', async () => {
+    const seriesPost = {
+      ...MOCK_POST,
+      meta: { ...MOCK_POST.meta, series: 'Test Series', seriesOrder: 1 },
+    }
+    const seriesPosts = [
+      { ...MOCK_POST.meta, slug: 'prev-post', series: 'Test Series', seriesOrder: 0 },
+      { ...MOCK_POST.meta, slug: 'test-post', series: 'Test Series', seriesOrder: 1 },
+      { ...MOCK_POST.meta, slug: 'next-post', series: 'Test Series', seriesOrder: 2 },
+    ]
+    mockBlog.getPostBySlug.mockReturnValue(seriesPost)
+    mockBlog.getRelatedPosts.mockReturnValue([])
+    mockBlog.getPostsInSeries.mockReturnValue(seriesPosts)
+
+    const { default: BlogPostPage } = await import('@/app/blog/[slug]/page')
+    render(await BlogPostPage({ params: Promise.resolve({ slug: 'test-post' }) }))
+
+    expect(screen.getByText(/part 2 of 3/i)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /previous in series/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /next in series/i })).toBeInTheDocument()
+  })
+})

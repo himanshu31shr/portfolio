@@ -24,6 +24,9 @@ export const metadata: Metadata = {
     default: `${personalInfo.name} | Senior Full Stack Engineer`,
     template: `%s | ${personalInfo.name}`,
   },
+  alternates: {
+    canonical: '/',
+  },
   description: `Portfolio of ${personalInfo.name} — Senior Full Stack Engineer specializing in Node.js, React, TypeScript, AWS, and AI-assisted engineering workflows.`,
   keywords: [
     'Full Stack Engineer',

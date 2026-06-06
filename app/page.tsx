@@ -1,20 +1,23 @@
 import { Hero } from '@/components/Hero'
+import { FeaturedPost } from '@/components/FeaturedPost'
+import { LatestPosts } from '@/components/LatestPosts'
 import { About } from '@/components/About'
 import { Experience } from '@/components/Experience'
-import { Skills } from '@/components/Skills'
 import { Projects } from '@/components/Projects'
-import { BlogPreview } from '@/components/BlogPreview'
 import { Contact } from '@/components/Contact'
+import { getLatestPost } from '@/lib/blog'
 
 export default function HomePage() {
+  const latestPost = getLatestPost()
+
   return (
     <>
-      <Hero />
+      <Hero latestPost={latestPost} />
+      <FeaturedPost />
+      <LatestPosts />
       <About />
       <Experience />
-      <Skills />
       <Projects />
-      <BlogPreview />
       <Contact />
     </>
   )

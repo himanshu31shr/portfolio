@@ -4,9 +4,10 @@ import { describe, it, expect, vi } from 'vitest'
 // Mock the blog module
 vi.mock('@/lib/blog', () => ({
   getAllPosts: vi.fn(),
+  getAllTags: vi.fn(),
 }))
 
-const mockGetAllPosts = vi.mocked(await import('@/lib/blog')).getAllPosts
+const mockBlog = vi.mocked(await import('@/lib/blog'))
 
 const MOCK_POSTS = [
   {
@@ -18,40 +19,47 @@ const MOCK_POSTS = [
     readTime: '5 min read',
     coverImage: '/images/blog/test.jpg',
     published: true,
+    series: '',
+    seriesOrder: 0,
   },
 ]
 
 describe('BlogPage', () => {
-  it('renders the Blog heading', async () => {
-    mockGetAllPosts.mockReturnValue(MOCK_POSTS)
+  it('renders the Writing heading', async () => {
+    mockBlog.getAllPosts.mockReturnValue(MOCK_POSTS)
+    mockBlog.getAllTags.mockReturnValue(['nextjs', 'react'])
     const { default: BlogPage } = await import('@/app/blog/page')
     render(<BlogPage />)
-    expect(screen.getByRole('heading', { name: /blog/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /writing/i })).toBeInTheDocument()
   })
 
   it('renders post titles from getAllPosts', async () => {
-    mockGetAllPosts.mockReturnValue(MOCK_POSTS)
+    mockBlog.getAllPosts.mockReturnValue(MOCK_POSTS)
+    mockBlog.getAllTags.mockReturnValue(['nextjs', 'react'])
     const { default: BlogPage } = await import('@/app/blog/page')
     render(<BlogPage />)
     expect(screen.getByText('Test Post Title')).toBeInTheDocument()
   })
 
   it('renders empty state when no posts', async () => {
-    mockGetAllPosts.mockReturnValue([])
+    mockBlog.getAllPosts.mockReturnValue([])
+    mockBlog.getAllTags.mockReturnValue([])
     const { default: BlogPage } = await import('@/app/blog/page')
     render(<BlogPage />)
     expect(screen.getByText(/no posts yet/i)).toBeInTheDocument()
   })
 
   it('renders Back to Home link in empty state', async () => {
-    mockGetAllPosts.mockReturnValue([])
+    mockBlog.getAllPosts.mockReturnValue([])
+    mockBlog.getAllTags.mockReturnValue([])
     const { default: BlogPage } = await import('@/app/blog/page')
     render(<BlogPage />)
     expect(screen.getByRole('link', { name: /back to home/i })).toBeInTheDocument()
   })
 
   it('renders post links when posts exist', async () => {
-    mockGetAllPosts.mockReturnValue(MOCK_POSTS)
+    mockBlog.getAllPosts.mockReturnValue(MOCK_POSTS)
+    mockBlog.getAllTags.mockReturnValue(['nextjs', 'react'])
     const { default: BlogPage } = await import('@/app/blog/page')
     render(<BlogPage />)
     const postLink = screen.getByRole('link', { name: /read: test post title/i })
@@ -59,16 +67,35 @@ describe('BlogPage', () => {
   })
 
   it('renders post read time', async () => {
-    mockGetAllPosts.mockReturnValue(MOCK_POSTS)
+    mockBlog.getAllPosts.mockReturnValue(MOCK_POSTS)
+    mockBlog.getAllTags.mockReturnValue(['nextjs', 'react'])
     const { default: BlogPage } = await import('@/app/blog/page')
     render(<BlogPage />)
     expect(screen.getByText('5 min read')).toBeInTheDocument()
   })
 
   it('renders post tags', async () => {
-    mockGetAllPosts.mockReturnValue(MOCK_POSTS)
+    mockBlog.getAllPosts.mockReturnValue(MOCK_POSTS)
+    mockBlog.getAllTags.mockReturnValue(['nextjs', 'react'])
     const { default: BlogPage } = await import('@/app/blog/page')
     render(<BlogPage />)
-    expect(screen.getByText('nextjs')).toBeInTheDocument()
+    const elements = screen.getAllByText('nextjs')
+    expect(elements.length).toBeGreaterThan(0)
+  })
+
+  it('renders tag filter buttons', async () => {
+    mockBlog.getAllPosts.mockReturnValue(MOCK_POSTS)
+    mockBlog.getAllTags.mockReturnValue(['nextjs', 'react'])
+    const { default: BlogPage } = await import('@/app/blog/page')
+    render(<BlogPage />)
+    expect(screen.getByRole('button', { name: /all/i })).toBeInTheDocument()
+  })
+
+  it('renders article count', async () => {
+    mockBlog.getAllPosts.mockReturnValue(MOCK_POSTS)
+    mockBlog.getAllTags.mockReturnValue(['nextjs', 'react'])
+    const { default: BlogPage } = await import('@/app/blog/page')
+    render(<BlogPage />)
+    expect(screen.getByText(/1 article/i)).toBeInTheDocument()
   })
 })

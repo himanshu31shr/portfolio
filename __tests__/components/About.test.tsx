@@ -41,11 +41,22 @@ describe('About', () => {
 
   it('renders TypeScript skill tag', () => {
     render(<About />)
-    expect(screen.getByText('TypeScript')).toBeInTheDocument()
+    expect(screen.getAllByText('TypeScript').length).toBeGreaterThan(0)
   })
 
   it('renders AWS skill tag', () => {
     render(<About />)
-    expect(screen.getByText('AWS')).toBeInTheDocument()
+    expect(screen.getAllByText('AWS').length).toBeGreaterThan(0)
+  })
+
+  it('renders Technical Toolkit heading', () => {
+    render(<About />)
+    expect(screen.getByText('Technical Toolkit')).toBeInTheDocument()
+  })
+
+  it('renders category cards for skills', () => {
+    render(<About />)
+    expect(screen.getByText('Frontend')).toBeInTheDocument()
+    expect(screen.getByText('Backend')).toBeInTheDocument()
   })
 })

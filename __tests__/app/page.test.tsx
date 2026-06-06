@@ -3,7 +3,15 @@ import { describe, it, expect, vi } from 'vitest'
 
 // Mock all section components so this test only checks composition
 vi.mock('@/components/Hero', () => ({
-  Hero: () => <div data-testid="hero-section">Hero</div>,
+  Hero: ({ latestPost }: { latestPost?: unknown }) => (
+    <div data-testid="hero-section">Hero{latestPost ? ' with latest' : ''}</div>
+  ),
+}))
+vi.mock('@/components/FeaturedPost', () => ({
+  FeaturedPost: () => <div data-testid="featured-post-section">FeaturedPost</div>,
+}))
+vi.mock('@/components/LatestPosts', () => ({
+  LatestPosts: () => <div data-testid="latest-posts-section">LatestPosts</div>,
 }))
 vi.mock('@/components/About', () => ({
   About: () => <div data-testid="about-section">About</div>,
@@ -11,17 +19,25 @@ vi.mock('@/components/About', () => ({
 vi.mock('@/components/Experience', () => ({
   Experience: () => <div data-testid="experience-section">Experience</div>,
 }))
-vi.mock('@/components/Skills', () => ({
-  Skills: () => <div data-testid="skills-section">Skills</div>,
-}))
 vi.mock('@/components/Projects', () => ({
   Projects: () => <div data-testid="projects-section">Projects</div>,
 }))
-vi.mock('@/components/BlogPreview', () => ({
-  BlogPreview: () => <div data-testid="blog-preview-section">BlogPreview</div>,
-}))
 vi.mock('@/components/Contact', () => ({
   Contact: () => <div data-testid="contact-section">Contact</div>,
+}))
+vi.mock('@/lib/blog', () => ({
+  getLatestPost: vi.fn(() => ({
+    slug: 'test',
+    title: 'Test',
+    date: '2026-01-01',
+    excerpt: '',
+    tags: [],
+    readTime: '5 min',
+    coverImage: '',
+    published: true,
+    series: '',
+    seriesOrder: 0,
+  })),
 }))
 
 describe('HomePage', () => {
@@ -30,11 +46,11 @@ describe('HomePage', () => {
     render(<HomePage />)
 
     expect(screen.getByTestId('hero-section')).toBeInTheDocument()
+    expect(screen.getByTestId('featured-post-section')).toBeInTheDocument()
+    expect(screen.getByTestId('latest-posts-section')).toBeInTheDocument()
     expect(screen.getByTestId('about-section')).toBeInTheDocument()
     expect(screen.getByTestId('experience-section')).toBeInTheDocument()
-    expect(screen.getByTestId('skills-section')).toBeInTheDocument()
     expect(screen.getByTestId('projects-section')).toBeInTheDocument()
-    expect(screen.getByTestId('blog-preview-section')).toBeInTheDocument()
     expect(screen.getByTestId('contact-section')).toBeInTheDocument()
   })
 
@@ -47,11 +63,11 @@ describe('HomePage', () => {
 
     expect(sectionIds).toEqual([
       'hero-section',
+      'featured-post-section',
+      'latest-posts-section',
       'about-section',
       'experience-section',
-      'skills-section',
       'projects-section',
-      'blog-preview-section',
       'contact-section',
     ])
   })
