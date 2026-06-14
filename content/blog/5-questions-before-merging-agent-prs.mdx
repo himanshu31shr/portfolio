@@ -1,0 +1,124 @@
+---
+title: "5 Questions Before Merging Agent PRs"
+date: "2026-06-09"
+excerpt: "AI agents can generate PRs at superhuman speed — but merging them without scrutiny is how you ship technical debt at scale. Here are the 5 questions I ask before every agent-generated PR gets approved."
+tags: [ai-engineering, code-review, agentic-workflows, engineering-practices, ci-cd]
+readTime: "5 min read"
+coverImage: "/images/blog/5-questions-before-merging-agent-prs.png"
+published: true
+---
+
+## The Merge Button Is the Last Line of Defense
+
+Last quarter, our agentic CI/CD pipeline generated over 200 pull requests across three active workstreams. Feature scaffolds, test suites, refactors — all appearing in my review queue before I'd finished my morning coffee.
+
+When I first integrated agentic workflows at an enterprise engagement, I made the mistake most teams make: I treated agent PRs like human PRs. Same review checklist, same gut-feel approval. Within two weeks, we'd merged a refactor that silently broke our accessibility compliance — something no lint rule caught because the agent had *technically* followed every pattern while missing the intent entirely.
+
+That experience forced me to develop a structured review framework. These are the **5 questions I now ask before every agent-generated PR gets merged**.
+
+## Question 1: Did the Agent Solve the Right Problem?
+
+Agents are exceptional at following instructions. They're terrible at questioning them. A vague prompt like "improve performance" can produce a PR that aggressively caches queries — including ones that *must* return fresh data.
+
+Before reviewing a single line, I check **prompt-to-diff alignment**:
+
+```yaml
+# agent-task.yml — what we asked
+task: "Reduce API response time for /api/v2/transactions"
+scope: "query optimization only"
+constraints:
+  - do not modify caching layer
+  - preserve existing pagination behavior
+
+# What the agent PR actually touched:
+# ✅ src/services/transactionQuery.ts — index hints added
+# ❌ src/middleware/cache.ts — TTL modified (out of scope)
+# ❌ src/routes/transactions.ts — pagination limit changed
+```
+
+Two of those three files violate the scope constraint. **The first question isn't "is this code correct?" — it's "is this code *relevant*?"**
+
+## Question 2: What Did It Change That It Wasn't Asked To?
+
+Agents have a tendency to "helpfully" refactor adjacent code. I call these **drift mutations**: changes that are technically improvements but weren't requested.
+
+I run a scope-check script in CI:
+
+```bash
+#!/bin/bash
+# scope-check.sh — flag files outside the agent's declared scope
+ALLOWED_PATHS=$(cat .agent-scope.json | jq -r '.allowed[]')
+CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+
+for file in $CHANGED_FILES; do
+  match=false
+  for pattern in $ALLOWED_PATHS; do
+    [[ "$file" == $pattern* ]] && match=true && break
+  done
+  [ "$match" = false ] && echo "⚠️  OUT OF SCOPE: $file"
+done
+```
+
+This catches about **30% of agent PRs** that include unauthorized changes — renamed variables in shared utilities, updated imports in unrelated modules, or "cleaned up" comments that actually contained critical context.
+
+## Question 3: Does It Understand the Boundaries It Can't See?
+
+Agents don't understand organizational boundaries — the handshake agreements between teams, the implicit contracts in shared APIs, the "don't touch this, it's load-bearing" tribal knowledge.
+
+At a fintech startup I co-founded, we had a payment reconciliation service with a seemingly redundant error-handling pattern. Any agent would refactor it. But that pattern existed because a third-party processor occasionally sent duplicate webhooks, and our retry logic depended on that exact shape.
+
+I now maintain a `.agent-boundaries.md` in every repository:
+
+```markdown
+# Agent Boundaries
+
+## Do Not Modify
+- `src/payments/reconciliation.ts` — custom retry logic for vendor edge cases
+- `src/auth/legacy-session.ts` — migration in progress, frozen until Q3
+
+## Requires Human Review
+- Any changes to `src/shared/` — cross-team dependencies
+- Database migration files — requires DBA sign-off
+```
+
+This file is referenced in the agent's system prompt and enforced in CI. Not bulletproof, but it eliminates the most dangerous category of blind changes.
+
+## Question 4: Can I Reproduce the Reasoning?
+
+Human developers explain *why* they made a choice. Agents can't — at least not reliably. I require every agent PR to include a **decision log**:
+
+> **Agent Decision Log:**
+> - Chose `Map` over `Object` for session storage because key deletion frequency exceeds 1000/min
+> - Skipped index on `created_at` because table has <10k rows; index overhead exceeds query savings
+> - Used `Promise.allSettled` instead of `Promise.all` to prevent partial failures from masking successes
+
+If the decision log is missing, shallow, or contradicts the implementation, the PR goes back. This ensures that when the next engineer modifies this code six months later, the *intent* is preserved alongside the *implementation*.
+
+## Question 5: What Happens When This Breaks at 3 AM?
+
+Every PR should answer: **when this fails in production, will the on-call engineer diagnose it?**
+
+Agent-generated code often has excellent happy-path coverage and abysmal failure-mode visibility. I've seen agent PRs with comprehensive edge-case tests that logged errors as `"Operation failed"` — completely useless during a 3 AM incident.
+
+My operability checklist:
+
+- **Error messages**: Enough context to diagnose without reading source?
+- **Observability**: Structured logs at key decision points?
+- **Degradation**: Fails open or closed — and is that *right* for this context?
+- **Rollback safety**: Revertible without migrations or data backfills?
+
+Having driven our team's MTTR down by 35% through better incident practices, I can tell you: a missing log line at 3 AM costs orders of magnitude more than adding it during review.
+
+## Key Takeaways
+
+Agent PRs aren't inherently riskier than human PRs — but they fail in *different* ways. They're confident, fast, and utterly unconcerned with organizational context.
+
+The framework, distilled:
+
+1. **Prompt-to-diff alignment** — Did it solve what you actually asked?
+2. **Scope containment** — Did it change things it shouldn't have?
+3. **Boundary awareness** — Does it respect contracts it can't see?
+4. **Reproducible reasoning** — Can you trace *why*, not just *what*?
+5. **Operability under failure** — Will this be debuggable at 3 AM?
+
+These five questions aren't overhead — they're the difference between **leveraging AI at scale** and **shipping technical debt at superhuman speed**.
