@@ -89,7 +89,7 @@ Human developers explain *why* they made a choice. Agents can't — at least not
 
 > **Agent Decision Log:**
 > - Chose `Map` over `Object` for session storage because key deletion frequency exceeds 1000/min
-> - Skipped index on `created_at` because table has <10k rows; index overhead exceeds query savings
+> - Skipped index on `created_at` because table has fewer than 10k rows; index overhead exceeds query savings
 > - Used `Promise.allSettled` instead of `Promise.all` to prevent partial failures from masking successes
 
 If the decision log is missing, shallow, or contradicts the implementation, the PR goes back. This ensures that when the next engineer modifies this code six months later, the *intent* is preserved alongside the *implementation*.
