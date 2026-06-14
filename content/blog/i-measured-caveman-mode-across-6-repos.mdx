@@ -1,0 +1,263 @@
+---
+title: "What 1,900 Caveman-Mode Messages Taught Me About AI Token Compression"
+date: "2026-06-14"
+excerpt: "I tracked every session where Caveman mode was actually active — Docker refactors, PDF fixes, PR review loops, and an always-on Electron project. Here's what ~68,000 output tokens of compressed agent replies looked like in practice."
+tags: [ai-engineering, developer-productivity, tooling, claude-code, agentic-workflows]
+readTime: "6 min read"
+coverImage: "/images/blog/i-measured-caveman-mode-across-6-repos.png"
+published: true
+---
+
+## Why I Started Counting Output Tokens
+
+[Caveman](https://getcaveman.dev/) is the open-source skill that makes AI coding agents drop filler and speak in fragments — "why use many token when few token do trick." The published benchmark claims **~65% fewer output tokens** with full technical accuracy preserved.
+
+I wanted numbers from my own workflow, not a README chart. So I parsed session logs from every stretch where Caveman was **actually active** — not installed, not configured, but **on** — across May through mid-June 2026.
+
+The result: **~14 active sessions**, roughly **1,900 compressed assistant turns**, and **~68,000 output tokens** while caveman rules were in effect — **4,056 measured** from Claude Code `usage.output_tokens`, the rest estimated from Cursor transcript volume. Four activation patterns emerged. Each one suited a different kind of work.
+
+> **Method note:** Claude Code sessions report exact `output_tokens` per turn. Cursor sessions don't expose token counts in transcripts, so those figures use the standard prose estimate (~4 characters per token). Directional comparisons hold; absolute Cursor numbers are approximate.
+
+## The Active Sessions at a Glance
+
+| Context | How caveman was armed | Active sessions | Compressed turns | Output tokens | Avg tokens / turn |
+|---------|----------------------|-----------------|------------------|---------------|-------------------|
+| Desktop pet app (Electron) | `alwaysApply` Cursor rule | 7 | 797 | **~29,000** (est.) | **~36** |
+| Internal tools monorepo | Skill attached at session start | 3 | ~900 | **~29,000** (est.) | **~32** |
+| Fintech backend (Node.js) | `/caveman` before execution work | 2 | 159 | **~6,800** (est.) | **~27–59** |
+| Content pipeline (Claude Code) | SessionStart hooks, `full` mode | 3 | 42 | **4,056** (measured) | **~97** |
+
+Every row above is time I spent with compression live — terse status updates instead of essay paragraphs, and context windows that lasted longer on marathon agent loops.
+
+## Activation 1: `/caveman` Before Execution-Heavy Work
+
+The fintech backend sessions were the first time I deliberately armed compression before a concrete deliverable.
+
+I typed `/caveman` at the start of a Docker optimization push: Alpine base, jemalloc, lockfile-first `npm ci`, compose replica tuning. The agent had already done the work. I needed a **status read**, not a lecture.
+
+What came back (~45 output tokens):
+
+> *"Done already: Dockerfile Alpine jemalloc… PR open… Image ~1.34GB (was ~1.85GB). You do: link ticket, smoke test compose. Next? Say task."*
+
+**159 compressed turns** across two sessions. **~6,800 estimated output tokens** total. Status replies ran **~27 tokens**; turns that included diff walkthroughs ran **~59 tokens** — still a fraction of the **~150+ tokens** the same updates typically cost in default mode.
+
+This is where caveman earned its keep for me:
+
+- **PR review loops** — one-line findings (~20–40 tokens) instead of paragraph preambles (~120+ tokens)
+- **Infrastructure diffs** — "file changed, reason, your action" format
+- **Multi-step CI fixes** — next step visible without a 50-token "Certainly! I'd be happy to help" opener
+
+Caveman's boundary rules matter here: **code, commits, and PR bodies stay normal.** Only the prose wrapper compresses. My Dockerfile and compose YAML didn't turn into abbreviations — the agent just stopped narrating every step it had already taken.
+
+```bash
+# How I arm it for a focused backend session
+/caveman
+
+# Or attach the skill manually in Cursor before the first prompt
+# Then give a task with clear scope — compression works best with execution, not exploration
+```
+
+## Activation 2: Skill Attached for Long Agent Loops
+
+The internal tools monorepo produced my heaviest caveman usage: **three June sessions**, **~900 compressed turns**, **~29,000 estimated output tokens**, spanning PDF generation fixes, Firestore security rule hardening, and full PR review cycles with Trello card updates.
+
+I attached the Caveman skill at session start — often with `/caveman` in the opening prompt — and left it on for the entire loop.
+
+First reply after attach (~12 output tokens):
+
+> *"PDF spacing fix. Find PDF generation code first."*
+
+No greeting. No "I'll help you with that." The agent immediately ran file search, read `pdfBarcode.ts`, adjusted spacing constants, and reported back in the same compressed register through **261 turns** (~8,400 estimated output tokens) in one session alone.
+
+PR review summaries compressed the same way. Instead of a **~80-token** preamble:
+
+> *"I've reviewed the bot comments and found several issues worth addressing. The first one relates to the Firestore rules..."*
+
+I got a **~35-token** summary:
+
+> *"3 bot comments triaged. 2 fixed, 1 acknowledged. Pushed `625ca76`, replied inline on each thread."*
+
+Then a numbered chain — security finding, dead state removal, advisory acknowledged — each item **~15–25 tokens**.
+
+**Average output per turn in these sessions: ~32 tokens** for status and reasoning prose. Tool payloads and generated code remained full-fidelity — those tokens aren't what caveman targets.
+
+This pattern fits work where:
+
+- The agent runs for **hours** across dozens of tool calls
+- You already know the architecture — you need **signal, not teaching**
+- Review loops generate repetitive narration that burns **hundreds of output tokens per cycle**
+
+My habit now: attach caveman **before** the first prompt on any session I expect to exceed 50 tool calls.
+
+## Activation 3: Always-On Rules for Daily Driver Repos
+
+The desktop pet project — an Electron overlay app — is where I stopped thinking about caveman entirely.
+
+I added a Cursor rule with `alwaysApply: true`:
+
+```markdown
+---
+description: "Caveman mode — terse communication, ~75% fewer tokens, full technical accuracy"
+alwaysApply: true
+---
+
+Respond terse like smart caveman. All technical substance stay. Only fluff die.
+
+Rules:
+- Drop articles, filler, pleasantries, hedging
+- Fragments OK. Short synonyms. Technical terms exact. Code unchanged.
+- Pattern: [thing] [action] [reason]. [next step].
+- Auto-Clarity: normal prose for security warnings, irreversible actions
+- Boundaries: code/commits/PRs written normal
+
+Switch: `/caveman lite|full|ultra` — Stop: "stop caveman" or "normal mode"
+```
+
+Seven sessions since June 11. **797 compressed turns**. **~29,000 estimated output tokens**. **~36 tokens per turn** on average. Zero manual `/caveman` invocations — I just opened the repo and started working.
+
+The sessions covered real feature work: modularizing `main.js`, adding native workspace watchers, wiring RTK shell hooks, updating `AGENTS.md` and project skills. The agent reported progress in **~40 tokens**:
+
+> *"Throttle extracted to `src/shared/throttle`. Tests pass. Native watcher build green. Next: agent infra files."*
+
+Across a **331-turn session**, that brevity compounds. At **~125 output tokens per verbose status turn**, narration alone would cost **~41,000 tokens**. At **~36 tokens per turn** with caveman active, the same session spent **~12,000 tokens** on prose — **~29,000 tokens of headroom** that kept the refactor coherent without mid-stream context pruning.
+
+At Claude Sonnet output pricing (~$15/M tokens), that's roughly **$0.44 saved in a single session** on narration alone. Scale that across seven sessions and the always-on rule pays for its setup in an afternoon.
+
+This is my default for **daily-driver repos** where I live in agent loops every week.
+
+## Activation 4: Claude Code Hooks from Session Start
+
+Three Claude Code sessions on my content pipeline — **42 assistant turns**, **4,056 measured output tokens** — ran with SessionStart hooks injecting caveman rules before message one. This is the only stretch where every number comes from `usage.output_tokens` in the session log, not estimation.
+
+The hook payload is explicit:
+
+```
+CAVEMAN MODE ACTIVE — level: full
+Drop articles/filler/pleasantries/hedging. Fragments OK.
+Code/commits/security: write normal.
+```
+
+Replies during active caveman time (~77 measured output tokens on a typical status turn):
+
+> *"Context loaded. Working directory: content-engine. Git status shows 8 modified files + 2 untracked + 3 new. What move next?"*
+
+That's **~97 tokens per turn** on average across all 42 turns — including turns where the agent emitted longer file lists. Pure status replies ran **~60–80 output tokens** versus the **~200+** I'd expect in default mode for the same content.
+
+Applying Caveman's 65% benchmark to the measured baseline: without compression, those 42 turns would have consumed roughly **~11,600 output tokens**. With caveman active, **4,056**. Estimated savings: **~7,500 output tokens** in one afternoon.
+
+Claude Code also reinforces caveman on every user prompt via a lightweight hook injection:
+
+```
+CAVEMAN MODE ACTIVE (full). Drop articles/filler/pleasantries/hedging.
+Fragments OK. Code/commits/security: write normal.
+```
+
+That per-turn reinforcement mattered. Without it, models drift back to verbose mid-conversation — especially after context compression prunes the SessionStart rules.
+
+```json
+// ~/.claude/settings.json — hooks that keep caveman armed
+{
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{
+        "type": "command",
+        "command": "node ~/.claude/hooks/caveman-activate.js"
+      }]
+    }],
+    "UserPromptSubmit": [{
+      "hooks": [{
+        "type": "command",
+        "command": "node ~/.claude/hooks/caveman-mode-tracker.js"
+      }]
+    }]
+  }
+}
+```
+
+Track the savings officially:
+
+```bash
+/caveman-stats
+# Reads session log output_tokens, estimates savings vs 65% benchmark
+# Writes to ~/.claude/.caveman-history.jsonl for lifetime aggregation
+```
+
+## What Compression Preserved (and What It Changed)
+
+Across all **~68,000 output tokens** in active caveman sessions, the pattern held:
+
+**Unchanged (full token cost):**
+- Code blocks, diffs, commit messages, PR descriptions
+- Security warnings and irreversible action confirmations (caveman's "auto-clarity" escape hatch)
+- Tool call payloads and error strings — quoted exact
+
+**Compressed (fewer output tokens):**
+- Status narration between tool calls — typically **60–70% fewer tokens** per turn
+- "Here's what I found" preambles before bullet lists
+- Review summaries and next-step suggestions
+- Repeated context re-statements in long sessions
+
+The fintech Docker session proved the boundary rule in practice: the agent spent tokens on normal, reviewable YAML and Dockerfile output while keeping *explanations* in caveman register. The internal tools PR loop did the same — full Firestore rule diffs at standard token cost, compressed triage commentary at **~32 tokens per turn**.
+
+## Input Tokens: The Savings I Haven't Captured Yet
+
+Everything above is **output token** compression — what the agent generates per turn. Caveman also targets **input tokens** via memory file compression:
+
+```bash
+/caveman-compress AGENTS.md
+# Compressed AGENTS.md for the agent; AGENTS.original.md for your edits
+# Claimed ~46% reduction in input tokens loaded every session start
+```
+
+I haven't run this on my repos yet. Every active session still loaded full-length agent context files at session start. Output compression saved **~68k tokens** over three weeks. Input compression would stack on top — same `AGENTS.md` read every time, fewer input tokens before the first reply.
+
+That's the next measurement pass.
+
+## When I Turn Caveman On Now
+
+After **~68,000 output tokens** of active caveman time, I match activation to the work:
+
+```yaml
+# When I arm caveman — based on active session data
+
+always_on_rule:
+  fit: daily-driver repos, recurring agent loops
+  example: Electron desktop app — 797 turns, ~29k output tokens, ~36 tokens/turn
+  wiring: .cursor/rules/caveman.mdc with alwaysApply: true
+
+session_start_attach:
+  fit: long execution sessions (50+ tool calls), PR review loops
+  example: internal tools monorepo — ~900 turns, ~29k output tokens, ~32 tokens/turn
+  wiring: attach caveman skill + /caveman in first prompt
+
+pre_task_invoke:
+  fit: focused infra/devops pushes with clear deliverable
+  example: fintech backend Docker — 159 turns, ~6.8k output tokens, ~27–59 tokens/turn
+  wiring: /caveman before scope-bound task
+
+claude_code_hooks:
+  fit: every Claude Code session on paid API models
+  example: content pipeline — 42 turns, 4,056 measured output tokens, ~7.5k saved
+  wiring: SessionStart activate + UserPromptSubmit reinforce
+  tip: default to lite for exploration, full for execution
+```
+
+**Mode selection:** `lite` drops filler but keeps sentences readable (~30% token reduction). `full` drops articles and uses fragments (~65% on prose). `ultra` when you're burning output tokens on a marathon session and already know the codebase cold (~75%).
+
+## Key Takeaways
+
+These lessons come from **active** caveman time only — **~68,000 output tokens** across **~1,900 turns** where compression was live.
+
+1. **Always-on rules: ~29,000 output tokens across 797 turns** (~36 tokens/turn) in seven desktop app sessions — zero manual invocation, ~29k tokens saved vs verbose baseline in the longest refactor alone.
+
+2. **Session-start attach: ~29,000 output tokens across ~900 turns** (~32 tokens/turn) on internal tools work — PDF fixes, security rules, PR triage — without reducing token spend on diffs or commits.
+
+3. **`/caveman` before execution: ~6,800 output tokens across 159 turns** (~27–59 tokens/turn) on Docker optimization — status reads that would cost ~150+ tokens each dropped to under 60.
+
+4. **Claude Code hooks: 4,056 measured output tokens across 42 turns** — ~7,500 tokens saved vs estimated verbose baseline, tracked via `usage.output_tokens` not guesswork.
+
+5. **Code stayed full-cost; prose compressed** — every activation pattern spent normal tokens on diffs, commits, and security warnings while cutting narration that was eating output token budget on long loops.
+
+Caveman's benchmark is output tokens. My data says the real win is **context endurance** — the same 300-turn session stays coherent because the agent stops re-explaining what you already know, turn after turn, token after token.
+
+Arm it before the loop starts. Measure with `/caveman-stats`. Compress your `AGENTS.md` once and cut input tokens on every session after. The meter only runs when caveman is on — so leave it on for the work that matters.
