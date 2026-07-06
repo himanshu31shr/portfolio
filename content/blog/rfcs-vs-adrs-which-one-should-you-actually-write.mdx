@@ -1,0 +1,164 @@
+---
+title: "RFCs vs ADRs: Which One Should You Actually Write?
+"
+date: "2026-07-06"
+excerpt: "Most teams pick one and force every decision through it. After authoring 40+ engineering standards across enterprise and startup contexts, here's the framework I use to choose between RFCs and ADRs — and when to skip both."
+tags: ["engineering-practices", "architecture", "documentation", "decision-making", "engineering-leadership"]
+readTime: "5 min read"
+coverImage: "/images/blog/rfcs-vs-adrs-which-one-should-you-actually-write.png"
+published: true
+---
+
+## The Documentation Trap Nobody Talks About
+
+Every engineering team I've worked with has had the same argument: "Should we write an RFC or an ADR?" The answer is almost always wrong — because the question itself is wrong. RFCs and ADRs solve fundamentally different problems. Treating them as interchangeable is like using a debugger when you need a profiler. Both involve staring at code, but the outcomes are entirely different.
+
+After authoring 40+ engineering standards across enterprise client engagements and building a fintech platform that scaled to 400k users, I've landed on a hard rule: **the document type should match the decision's blast radius, not your team's habit.** A small team shipping fast needs lightweight ADRs. A cross-functional platform migration demands an RFC. Forcing everything into one format either slows you down or leaves critical decisions undocumented.
+
+## What an ADR Actually Is (And Isn't)
+
+An Architecture Decision Record captures a **single decision** with its context, options considered, and the rationale behind the chosen path. It's a point-in-time snapshot — not a proposal, not a discussion thread. The decision is already made.
+
+Here's the ADR template I use across teams:
+
+```markdown
+# ADR-0042: Use Redis for Session Storage
+
+## Status
+Accepted
+
+## Context
+Our Node.js services store sessions in-memory, causing data loss
+on container restarts. ECS task recycling drops ~2% of active sessions
+during deployments. We need a shared, persistent session store.
+
+## Decision
+Adopt Redis (ElastiCache) for session storage across all services.
+
+## Consequences
+- Sessions survive container restarts and blue-green deployments
+- Adds Redis as an infrastructure dependency (~$45/month)
+- Requires session serialization — no complex objects in session state
+- Team must learn Redis connection pooling patterns
+```
+
+Notice what's missing: there's no "Alternatives Analysis" section spanning three pages. No stakeholder sign-off matrix. The ADR records **what** was decided and **why**, in under a hundred words. When I was leading a team of eight engineers at a fintech startup, we shipped ADRs as markdown files committed alongside the code they affected. A developer six months later could open `docs/adr/` and understand every architectural pivot without excavating Slack threads.
+
+## What an RFC Is For
+
+A Request for Comments is a **proposal** — it invites feedback *before* a decision is made. RFCs are collaborative documents designed to surface risks, gather cross-team input, and build consensus on changes with wide blast radius.
+
+When I led the migration from a monolithic MVP to a microservices architecture, we wrote an RFC before touching a single line of code. The migration affected authentication, data pipelines, deployment infrastructure, and billing. An ADR would have been absurd — the decision hadn't been made yet, and we needed input from backend engineers, the QA team, and our DevOps pipeline owners.
+
+Here's the skeleton I use for RFCs:
+
+```markdown
+# RFC: Migrate Authentication to Standalone Microservice
+
+## Summary
+Extract auth logic from the monolith into a dedicated service behind
+an API gateway, enabling independent scaling and deployment.
+
+## Motivation
+Current auth is coupled to the monolith's deploy cycle. A single
+auth bug forces a full platform redeploy (~18 min). Decoupling
+reduces auth deploy time to ~3 min and isolates blast radius.
+
+## Proposed Design
+- Standalone Node.js service with Redis-backed token store
+- JWT validation middleware shared via internal npm package
+- Migration: dual-write phase (4 weeks), then cutover
+
+## Open Questions
+1. Do we migrate existing sessions or force re-login?
+2. Rate limiting at gateway vs service level?
+
+## Alternatives Considered
+- API gateway auth only (rejected: insufficient audit logging)
+- Third-party auth provider (rejected: data residency concerns)
+```
+
+The RFC format deliberately includes **Open Questions** — because the entire point is to get answers before committing. I've seen teams write "RFCs" that are actually just long ADRs with a fancier title. If there are no open questions and no feedback loop, you don't have an RFC. You have a memo.
+
+## The 3-Question Decision Framework
+
+After years of managing concurrent engineering workstreams and writing documentation that teams actually read, I use three questions to decide which format fits:
+
+1. **Is the decision already made?** → Write an ADR.
+2. **Does this change cross team or service boundaries?** → Write an RFC.
+3. **Can the decision be reversed in under a day?** → Consider skipping both — a code comment or commit message might be enough.
+
+This framework saved us from two failure modes I'd seen repeatedly. At a real estate tech company, we over-documented: every database index change got an ADR. The `docs/` folder became a graveyard nobody searched. At an early-stage startup, we under-documented: critical auth decisions lived in a Slack thread that auto-deleted after ninety days.
+
+> **The sweet spot**: ADRs for decisions that would confuse a new hire. RFCs for decisions that could break another team's sprint.
+
+## Encoding the Framework in Your Repository
+
+Documentation that lives outside the codebase dies. I embed both formats directly in the repo using a simple convention:
+
+```bash
+project-root/
+├── docs/
+│   ├── adr/
+│   │   ├── 0001-use-typescript-strict-mode.md
+│   │   ├── 0002-adopt-redis-for-caching.md
+│   │   └── template.md
+│   └── rfc/
+│       ├── 001-migrate-to-microservices.md
+│       ├── 002-event-driven-notifications.md
+│       └── template.md
+```
+
+ADRs are numbered sequentially and immutable — you never edit an old ADR, you supersede it with a new one. RFCs have a lifecycle: `Draft → Under Review → Accepted/Rejected → Superseded`. When managing CI/CD pipelines, I added a pre-commit hook that validates ADR formatting:
+
+```javascript
+// scripts/validate-adrs.js
+const fs = require('fs');
+const path = require('path');
+
+const ADR_DIR = path.join(__dirname, '..', 'docs', 'adr');
+const REQUIRED_SECTIONS = ['## Status', '## Context', '## Decision', '## Consequences'];
+
+const files = fs.readdirSync(ADR_DIR).filter(f => f.endsWith('.md') && f !== 'template.md');
+
+let failures = 0;
+files.forEach(file => {
+  const content = fs.readFileSync(path.join(ADR_DIR, file), 'utf-8');
+  const missing = REQUIRED_SECTIONS.filter(s => !content.includes(s));
+  if (missing.length > 0) {
+    console.error(`${file}: missing sections: ${missing.join(', ')}`);
+    failures++;
+  }
+});
+
+process.exit(failures > 0 ? 1 : 0);
+```
+
+This catches malformed ADRs before they land in `main`. It takes five minutes to set up and prevents the slow decay of documentation quality that plagues every team I've worked with.
+
+## When to Skip Both
+
+Not every decision needs a document. When I was building internal tools and delivery management systems early in my career, we wasted hours documenting choices that were trivially reversible. Choosing between `dayjs` and `date-fns`? That's a commit message, not an ADR. Picking a CSS naming convention for a single component? A code comment.
+
+The threshold I use: **if reversing the decision takes less effort than writing the document, skip the document.** Save your team's writing energy for decisions that actually compound — database choices, API contracts, authentication flows, and service boundaries.
+
+## Making It Stick: Review Cadence
+
+Documentation rots without maintenance. Every quarter, I schedule a thirty-minute "ADR audit" where the team scans the `docs/adr/` directory and marks stale records as `Superseded`. For RFCs, we review open proposals bi-weekly during sprint planning. This cadence prevents the two most common documentation deaths: **the ghost town** (nobody reads it) and **the museum** (everything is outdated but preserved).
+
+At my current role managing three concurrent workstreams, this practice keeps architectural context alive across teams. A new engineer onboarding can read the last ten ADRs and understand six months of technical evolution in under an hour.
+
+## Key Takeaways
+
+Choosing between RFCs and ADRs is not a religious debate — it's a sizing exercise. Here's the framework distilled:
+
+- **ADRs record decisions already made.** Keep them short, immutable, and co-located with code. If a new hire would ask "why did we do this?" — write an ADR.
+
+- **RFCs propose changes that need feedback.** Use them for cross-team or high-blast-radius decisions. If there are no open questions, it's not an RFC.
+
+- **Use the 3-question test**: Decision made? ADR. Crosses boundaries? RFC. Reversible in a day? Skip both.
+
+- **Embed documentation in the repo**, enforce structure with automation, and audit quarterly. Documentation that lives in Confluence dies in Confluence.
+
+- **Protect your team's writing energy.** Over-documentation kills adoption just as surely as under-documentation kills knowledge. Match the document's weight to the decision's gravity.
+
