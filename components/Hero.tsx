@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronDown, Download, ExternalLink, BookOpen } from 'lucide-react'
-import { personalInfo } from '@/lib/constants'
+import { personalInfo, resumeDownloads } from '@/lib/constants'
 import type { PostMeta } from '@/lib/blog'
 
 const ROLES = [
@@ -15,20 +15,22 @@ const ROLES = [
   'WCAG 2.1 AA Champion',
 ]
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
+
 export function Hero({ latestPost }: { latestPost?: PostMeta | null }) {
   const [roleIndex, setRoleIndex] = useState(0)
   const [displayText, setDisplayText] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
+  const [resumeMenuOpen, setResumeMenuOpen] = useState(false)
+  const resumeMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const currentRole = ROLES[roleIndex]
     let timeout: ReturnType<typeof setTimeout>
 
     if (!isDeleting && displayText === currentRole) {
-      // Pause before deleting
       timeout = setTimeout(() => setIsDeleting(true), 2000)
     } else if (isDeleting && displayText === '') {
-      // Move to next role after a short pause
       timeout = setTimeout(() => {
         setIsDeleting(false)
         setRoleIndex((prev) => (prev + 1) % ROLES.length)
@@ -47,6 +49,30 @@ export function Hero({ latestPost }: { latestPost?: PostMeta | null }) {
     return () => clearTimeout(timeout)
   }, [displayText, isDeleting, roleIndex])
 
+  useEffect(() => {
+    if (!resumeMenuOpen) return
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (resumeMenuRef.current && !resumeMenuRef.current.contains(event.target as Node)) {
+        setResumeMenuOpen(false)
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setResumeMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [resumeMenuOpen])
+
   const handleScrollDown = () => {
     const aboutSection = document.getElementById('about')
     aboutSection?.scrollIntoView({ behavior: 'smooth' })
@@ -62,7 +88,7 @@ export function Hero({ latestPost }: { latestPost?: PostMeta | null }) {
       <div className="mb-8 relative">
         <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden glass p-0.5 glow-blue">
           <Image
-            src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/images/avatar.jpg`}
+            src={`${basePath}/images/avatar.jpg`}
             alt={`${personalInfo.name} avatar`}
             className="w-full h-full rounded-full object-cover"
             width={144}
@@ -113,15 +139,42 @@ export function Hero({ latestPost }: { latestPost?: PostMeta | null }) {
           View My Work
           <ChevronDown className="w-4 h-4" aria-hidden="true" />
         </button>
-        <a
-          href="/portfolio/Himanshu_Shrivastava_Resume.pdf"
-          download
-          className="btn-outline flex items-center gap-2"
-          aria-label="Download resume PDF"
-        >
-          Download Resume
-          <Download className="w-4 h-4" aria-hidden="true" />
-        </a>
+
+        <div className="relative" ref={resumeMenuRef}>
+          <button
+            type="button"
+            onClick={() => setResumeMenuOpen((open) => !open)}
+            className="btn-outline flex items-center gap-2 w-full sm:w-auto justify-center"
+            aria-haspopup="menu"
+            aria-expanded={resumeMenuOpen}
+            aria-label="Download resume — choose role level"
+          >
+            Download Resume
+            <Download className="w-4 h-4" aria-hidden="true" />
+            <ChevronDown className="w-4 h-4" aria-hidden="true" />
+          </button>
+          {resumeMenuOpen && (
+            <div
+              role="menu"
+              className="absolute left-0 right-0 sm:left-auto sm:right-auto sm:min-w-[240px] mt-2 z-20 glass rounded-lg border border-glass-border py-1 shadow-lg"
+            >
+              {resumeDownloads.map((item) => (
+                <a
+                  key={item.roleLevel}
+                  href={`${basePath}/resumes/${item.file}`}
+                  download
+                  role="menuitem"
+                  className="block px-4 py-2 text-sm text-text-secondary hover:text-accent-blue hover:bg-accent-blue/10 transition-colors"
+                  aria-label={`Download ${item.label} resume PDF`}
+                  onClick={() => setResumeMenuOpen(false)}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+
         <a
           href={personalInfo.linkedin}
           target="_blank"
