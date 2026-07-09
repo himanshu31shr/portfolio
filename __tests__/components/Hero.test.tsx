@@ -23,11 +23,43 @@ describe('Hero', () => {
     expect(screen.getByRole('region', { name: /hero section/i })).toBeInTheDocument()
   })
 
-  it('renders download resume link', () => {
+  it('renders download resume menu button', () => {
     render(<Hero />)
-    const downloadLink = screen.getByRole('link', { name: /download resume/i })
-    expect(downloadLink).toBeInTheDocument()
-    expect(downloadLink).toHaveAttribute('download')
+    const downloadButton = screen.getByRole('button', { name: /download resume — choose role level/i })
+    expect(downloadButton).toBeInTheDocument()
+    expect(downloadButton).toHaveAttribute('aria-haspopup', 'menu')
+    expect(downloadButton).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('opens resume menu with four role-level downloads', () => {
+    render(<Hero />)
+    fireEvent.click(screen.getByRole('button', { name: /download resume — choose role level/i }))
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: /download software engineer resume pdf/i })).toHaveAttribute(
+      'download'
+    )
+    expect(screen.getByRole('menuitem', { name: /download senior software engineer resume pdf/i })).toHaveAttribute(
+      'href',
+      '/resumes/senior-software-engineer.pdf'
+    )
+    expect(screen.getByRole('menuitem', { name: /download staff engineer resume pdf/i })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: /download lead engineer resume pdf/i })).toBeInTheDocument()
+  })
+
+  it('closes resume menu on escape', () => {
+    render(<Hero />)
+    fireEvent.click(screen.getByRole('button', { name: /download resume — choose role level/i }))
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('closes resume menu on outside click', () => {
+    render(<Hero />)
+    fireEvent.click(screen.getByRole('button', { name: /download resume — choose role level/i }))
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    fireEvent.mouseDown(document.body)
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
 
   it('renders LinkedIn link', () => {

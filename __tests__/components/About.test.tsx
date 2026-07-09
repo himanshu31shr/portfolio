@@ -58,5 +58,6 @@ describe('About', () => {
     render(<About />)
     expect(screen.getByText('Frontend')).toBeInTheDocument()
     expect(screen.getByText('Backend')).toBeInTheDocument()
+    expect(screen.getByText('Testing')).toBeInTheDocument()
   })
 })

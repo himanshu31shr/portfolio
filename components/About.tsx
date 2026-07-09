@@ -10,6 +10,7 @@ import {
   Cloud,
   BarChart3,
   Bot,
+  TestTube,
 } from 'lucide-react'
 import { personalInfo, stats, skillCategories, type SkillCategory } from '@/lib/constants'
 import { GlassCard } from './GlassCard'
@@ -33,6 +34,7 @@ const SKILL_ICON_MAP = {
   Cloud,
   BarChart3,
   Bot,
+  TestTube,
 } as const
 
 type SkillIconName = keyof typeof SKILL_ICON_MAP

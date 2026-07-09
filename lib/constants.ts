@@ -127,32 +127,115 @@ export const skillCategories: SkillCategory[] = [
   {
     name: 'Frontend',
     icon: 'Monitor',
-    skills: ['React.js', 'Angular', 'HTML5', 'CSS3', 'Electron'],
+    skills: [
+      'React.js',
+      'Next.js',
+      'Angular',
+      'HTML5',
+      'CSS3',
+      'Tailwind CSS',
+      'CSS Modules',
+      'Electron',
+      'Redux',
+      'jQuery',
+    ],
+  },
+  {
+    name: 'Testing',
+    icon: 'TestTube',
+    skills: ['Jest', 'Cypress', 'Playwright', 'Mocha', 'Stryker'],
   },
   {
     name: 'Backend',
     icon: 'Server',
-    skills: ['Node.js', 'Microservices', 'REST APIs', 'RabbitMQ', 'Redis'],
+    skills: [
+      'Node.js',
+      'Express.js',
+      'Flask',
+      'Microservices',
+      'REST APIs',
+      'GraphQL',
+      'RabbitMQ',
+      'Redis',
+      'WebSockets',
+      'OpenAPI',
+      'Discord API',
+      'WhatsApp API',
+    ],
   },
   {
     name: 'Databases',
     icon: 'Database',
-    skills: ['MySQL', 'MongoDB', 'DynamoDB'],
+    skills: ['MySQL', 'MongoDB', 'PostgreSQL', 'SQLite', 'DynamoDB', 'Firebase'],
   },
   {
     name: 'Cloud & DevOps',
     icon: 'Cloud',
-    skills: ['AWS', 'Docker', 'Terraform', 'Azure DevOps', 'GitHub Actions', 'CI/CD'],
+    skills: [
+      'AWS',
+      'Docker',
+      'Terraform',
+      'Azure DevOps',
+      'GitHub Actions',
+      'CI/CD',
+      'nginx',
+      'PM2',
+      'VPC',
+      'CDN',
+      'Linux',
+    ],
   },
   {
     name: 'Data & Observability',
     icon: 'BarChart3',
-    skills: ['Airflow', 'Superset', 'NewRelic', 'CloudWatch', 'Mixpanel'],
+    skills: ['Airflow', 'Superset', 'NewRelic', 'CloudWatch', 'Datadog', 'Mixpanel'],
   },
   {
     name: 'AI Engineering',
     icon: 'Bot',
-    skills: ['Claude Code', 'GitHub Copilot', 'AI-based PR Review', 'Agentic CI/CD'],
+    skills: [
+      'Claude Code',
+      'Cursor',
+      'GitHub Copilot',
+      'MCP',
+      'AI-based PR Review',
+      'Agentic CI/CD',
+      'Prompt Engineering',
+      'RAG',
+      'LangChain',
+      'Ollama',
+    ],
+  },
+]
+
+export interface ResumeDownload {
+  roleLevel: string
+  label: string
+  file: string
+  isDefault?: boolean
+}
+
+export const resumeDownloads: ResumeDownload[] = [
+  {
+    roleLevel: 'software_engineer',
+    label: 'Software Engineer',
+    file: 'software-engineer.pdf',
+  },
+  {
+    roleLevel: 'senior_software_engineer',
+    label: 'Senior Software Engineer',
+    file: 'senior-software-engineer.pdf',
+    isDefault: true,
+  },
+  {
+    roleLevel: 'staff_engineer',
+    label: 'Staff Engineer',
+    file: 'staff-engineer.pdf',
+  },
+  {
+    roleLevel: 'lead_engineer',
+    label: 'Lead Engineer',
+    file: 'lead-engineer.pdf',
   },
 ]
 

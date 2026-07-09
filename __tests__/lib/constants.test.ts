@@ -3,6 +3,7 @@ import {
   personalInfo,
   experience,
   skillCategories,
+  resumeDownloads,
   projects,
   education,
   stats,
@@ -11,6 +12,7 @@ import {
   type SkillCategory,
   type ProjectItem,
   type EducationItem,
+  type ResumeDownload,
 } from '@/lib/constants'
 
 describe('personalInfo', () => {
@@ -76,8 +78,8 @@ describe('experience', () => {
 })
 
 describe('skillCategories', () => {
-  it('has exactly 7 skill categories', () => {
-    expect(skillCategories).toHaveLength(7)
+  it('has exactly 8 skill categories', () => {
+    expect(skillCategories).toHaveLength(8)
   })
 
   it('each category has required fields', () => {
@@ -103,6 +105,33 @@ describe('skillCategories', () => {
     const ai = skillCategories.find((c) => c.name === 'AI Engineering')
     expect(ai).toBeDefined()
     expect(ai?.skills).toContain('Claude Code')
+  })
+
+  it('includes Testing category', () => {
+    const testing = skillCategories.find((c) => c.name === 'Testing')
+    expect(testing).toBeDefined()
+    expect(testing?.skills).toContain('Jest')
+    expect(testing?.icon).toBe('TestTube')
+  })
+})
+
+describe('resumeDownloads', () => {
+  it('has exactly 4 resume downloads', () => {
+    expect(resumeDownloads).toHaveLength(4)
+  })
+
+  it('each download has required fields', () => {
+    resumeDownloads.forEach((item: ResumeDownload) => {
+      expect(item.roleLevel).toBeTruthy()
+      expect(item.label).toBeTruthy()
+      expect(item.file).toMatch(/\.pdf$/)
+    })
+  })
+
+  it('marks Senior Software Engineer as default', () => {
+    const defaults = resumeDownloads.filter((item) => item.isDefault)
+    expect(defaults).toHaveLength(1)
+    expect(defaults[0].label).toBe('Senior Software Engineer')
   })
 })
 
