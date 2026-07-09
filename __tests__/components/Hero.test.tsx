@@ -62,6 +62,39 @@ describe('Hero', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument()
   })
 
+  it('closes resume menu when a menu item is clicked', () => {
+    render(<Hero />)
+    fireEvent.click(screen.getByRole('button', { name: /download resume — choose role level/i }))
+    fireEvent.click(screen.getByRole('menuitem', { name: /download software engineer resume pdf/i }))
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+  })
+
+  it('toggles resume menu closed when download button is clicked while open', () => {
+    render(<Hero />)
+    const downloadButton = screen.getByRole('button', { name: /download resume — choose role level/i })
+    fireEvent.click(downloadButton)
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    fireEvent.click(downloadButton)
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument()
+    expect(downloadButton).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('keeps resume menu open when clicking inside the menu', () => {
+    render(<Hero />)
+    fireEvent.click(screen.getByRole('button', { name: /download resume — choose role level/i }))
+    const menu = screen.getByRole('menu')
+    fireEvent.mouseDown(menu)
+    expect(menu).toBeInTheDocument()
+  })
+
+  it('keeps resume menu open when a non-escape key is pressed', () => {
+    render(<Hero />)
+    fireEvent.click(screen.getByRole('button', { name: /download resume — choose role level/i }))
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    fireEvent.keyDown(document, { key: 'Tab' })
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+  })
+
   it('renders LinkedIn link', () => {
     render(<Hero />)
     const linkedinLink = screen.getByRole('link', { name: /linkedin/i })
