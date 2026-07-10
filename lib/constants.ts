@@ -13,7 +13,7 @@ export const personalInfo = {
   location: 'India',
   avatar: '/images/avatar.png',
   summary:
-    'Senior Full Stack Engineer and startup technology leader with 9+ years of experience building and scaling fintech, SaaS, and cloud-native platforms. Deep expertise in Node.js, React, TypeScript, Python, AWS, microservices, CI/CD automation, accessibility engineering, and AI-assisted developer workflows. Proven track record of architecting systems that scaled to 400k+ users, improving deployment speed by 50%, driving WCAG 2.1 AA compliance, and applying agentic engineering automation to improve code quality, developer productivity, and operational efficiency.',
+    'Senior Full Stack Engineer and startup technology leader with 9+ years of experience building and scaling fintech, SaaS, and cloud-native platforms. Deep expertise in Node.js, React, TypeScript, Python, AWS, microservices, CI/CD automation, accessibility engineering, and AI-assisted developer workflows. Proven track record of architecting systems that scaled to 1M+ users, improving deployment speed by 50%, driving WCAG 2.1 AA compliance, and applying agentic engineering automation to improve code quality, developer productivity, and operational efficiency.',
 } as const
 
 export interface ExperienceItem {
@@ -52,7 +52,7 @@ export const experience: ExperienceItem[] = [
     endDate: '2024-08',
     isCurrent: false,
     achievements: [
-      'Architected a peer-to-peer lending platform serving 400k+ users and led the migration from a monolithic MVP to a microservices architecture using Node.js, Redis, and AWS ECS, achieving 99.9% uptime and reducing infrastructure costs by 35%.',
+      'Architected a peer-to-peer lending platform serving 1M+ users and led the migration from a monolithic MVP to a microservices architecture using Node.js, Redis, and AWS ECS, achieving 99.9% uptime and reducing infrastructure costs by 35%.',
       'Built and led a cross-functional team of 8 engineers, QAs, and designers, introducing Agile delivery practices and bi-weekly release cycles that reduced feature time-to-market by 40%.',
       'Implemented CI/CD pipelines in Azure DevOps to automate build, test, and deployment workflows, reducing deployment time by 50% and improving release reliability.',
       'Designed ETL pipelines using Apache Airflow to unify product and application data from operational databases and Mixpanel, deploying Apache Superset dashboards that uncovered $50k+ in optimized transactional leakage.',
@@ -131,6 +131,8 @@ export const skillCategories: SkillCategory[] = [
       'React.js',
       'Next.js',
       'Angular',
+      'Angular Material',
+      'Vite',
       'HTML5',
       'CSS3',
       'Tailwind CSS',
@@ -143,7 +145,7 @@ export const skillCategories: SkillCategory[] = [
   {
     name: 'Testing',
     icon: 'TestTube',
-    skills: ['Jest', 'Cypress', 'Playwright', 'Mocha', 'Stryker'],
+    skills: ['Jest', 'Vitest', 'Cypress', 'Playwright', 'Mocha', 'Stryker'],
   },
   {
     name: 'Backend',
@@ -151,6 +153,7 @@ export const skillCategories: SkillCategory[] = [
     skills: [
       'Node.js',
       'Express.js',
+      'NestJS',
       'Flask',
       'Microservices',
       'Multi-tenancy',
@@ -167,7 +170,7 @@ export const skillCategories: SkillCategory[] = [
   {
     name: 'Databases',
     icon: 'Database',
-    skills: ['MySQL', 'MongoDB', 'PostgreSQL', 'SQLite', 'DynamoDB', 'Firebase'],
+    skills: ['MySQL', 'MongoDB', 'PostgreSQL', 'SQLite', 'DynamoDB', 'Firebase', 'Supabase'],
   },
   {
     name: 'Cloud & DevOps',
@@ -206,6 +209,7 @@ export const skillCategories: SkillCategory[] = [
       'RAG',
       'LangChain',
       'Ollama',
+      'Google Gemini API',
     ],
   },
 ]
@@ -331,7 +335,7 @@ export const education: EducationItem[] = [
 
 export const stats = [
   { label: 'Years Experience', value: '9+', icon: 'Calendar' },
-  { label: 'Users Served', value: '400K+', icon: 'Users' },
+  { label: 'Users Served', value: '1M+', icon: 'Users' },
   { label: 'Uptime Achieved', value: '99.9%', icon: 'Activity' },
   { label: 'Accessibility', value: 'WCAG 2.1 AA', icon: 'Accessibility' },
 ] as const

@@ -24,9 +24,9 @@ describe('About', () => {
     expect(screen.getByText('9+')).toBeInTheDocument()
   })
 
-  it('renders "400K+" users stat', () => {
+  it('renders "1M+" users stat', () => {
     render(<About />)
-    expect(screen.getByText('400K+')).toBeInTheDocument()
+    expect(screen.getByText('1M+')).toBeInTheDocument()
   })
 
   it('renders "99.9%" uptime stat', () => {
