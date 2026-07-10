@@ -145,7 +145,7 @@ export const skillCategories: SkillCategory[] = [
   {
     name: 'Testing',
     icon: 'TestTube',
-    skills: ['Jest', 'Vitest', 'Cypress', 'Playwright', 'Mocha', 'Stryker'],
+    skills: ['Jest', 'React Testing Library', 'Vitest', 'Cypress', 'Playwright', 'Mocha', 'Stryker'],
   },
   {
     name: 'Backend',
@@ -186,14 +186,14 @@ export const skillCategories: SkillCategory[] = [
       'PM2',
       'VPC',
       'CloudFront',
-      'Route 53',
-      'Linux',
+      'Prettier',
+      'Husky',
     ],
   },
   {
     name: 'Data & Observability',
     icon: 'BarChart3',
-    skills: ['Airflow', 'Superset', 'NewRelic', 'CloudWatch', 'Datadog', 'Mixpanel'],
+    skills: ['Airflow', 'Superset', 'NewRelic', 'CloudWatch', 'Datadog', 'Mixpanel', 'LaunchDarkly', 'Feature flagging'],
   },
   {
     name: 'AI Engineering',
@@ -206,9 +206,10 @@ export const skillCategories: SkillCategory[] = [
       'AI-based PR Review',
       'Agentic CI/CD',
       'Prompt Engineering',
+      'Prompt/version management',
+      'Secure AI usage guidelines',
       'RAG',
       'LangChain',
-      'Ollama',
       'Google Gemini API',
     ],
   },
