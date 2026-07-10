@@ -197,7 +197,7 @@ describe('stats', () => {
 
   it('contains users served stat', () => {
     const users = stats.find((s) => s.label === 'Users Served')
-    expect(users?.value).toBe('400K+')
+    expect(users?.value).toBe('1M+')
   })
 })
 
