@@ -165,6 +165,9 @@ export const skillCategories: SkillCategory[] = [
       'OpenAPI',
       'Discord API',
       'WhatsApp API',
+      'KYC',
+      'Payments',
+      'Rewards',
     ],
   },
   {
