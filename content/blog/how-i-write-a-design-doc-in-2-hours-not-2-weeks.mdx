@@ -1,0 +1,130 @@
+---
+title: "How I Write a Design Doc in 2 Hours (Not 2 Weeks)"
+date: "2026-07-14"
+excerpt: "A practical, time-boxed framework to go from a blank page to a signed-off technical architecture in exactly 120 minutes."
+tags: ["engineering-practices", "architecture", "developer-productivity", "documentation", "engineering-leadership"]
+readTime: "5 min read"
+coverImage: "/images/blog/how-i-write-a-design-doc-in-2-hours-not-2-weeks.png"
+published: true
+---
+
+The most expensive document in software engineering takes two weeks to write, three weeks to review, and is outdated the day the code merges. Early in my career, I spent days detailing class hierarchies and debating schemas. It wasn't until co-founding a fintech platform serving 1M+ users that I realized a truth: **design docs are alignment tools, not specs.** When you treat them as specs, you seek completion and invite analysis paralysis. When you treat them as alignment tools, you seek agreement on the hardest parts: system boundaries, interfaces, and failure modes. By time-boxing the entire writing process to exactly 2 hours, you force your focus entirely onto the highest-risk architectural choices and critical system boundaries.
+
+## The High Cost of the Two-Week Design Doc
+
+In traditional software environments, writing a design document is treated as an administrative milestone. You write a draft, schedule meetings, collect feedback, rewrite, and repeat. By the time it is approved, requirements have shifted, schemas have evolved, and engineers have already written half the code using assumptions.
+
+This process has three flaws:
+1. **Low Readership**: Nobody reads a 40-page thesis. Engineers scan the schemas and skip the prose.
+2. **Artificial Certainty**: Detailing helpers weeks before coding ignores real-world discoveries.
+3. **Decoupled Ownership**: If an architect hands off the design, implementers feel no ownership, leading to silent workarounds.
+
+Stop wasting valuable engineering cycles writing exhaustive user manuals before a single line of code is written; map the hard, irreversible decisions instead.
+
+## The 2-Hour Timebox: Constraint as a Catalyst
+
+Giving yourself weeks to write a design doc guarantees that it will take weeks. Parkinson’s Law states that work expands to fill the time available for its completion. In a fast-paced environment, this delay is a project killer. When we migrated our monolithic fintech MVP to a microservices architecture using Node.js and AWS ECS, we had to ship features weekly while changing core infrastructure. We could not afford two-week planning cycles.
+
+We introduced a strict 2-hour limit for writing design docs. This constraint acts as an engineering filter, forcing you to prioritize the critical 20% of the architecture that carries 80% of the system's overall risk. You bypass CRUD boilerplate and focus on critical paths: network partitions, database indexing under high write loads, and rate-limiting rules at the API gateway.
+
+## The Pre-Work: Assembling Context in 15 Minutes
+
+You cannot write a design doc in 2 hours starting from zero. The timer begins only after prep work is done. This asynchronous step takes under 15 minutes.
+
+Before starting the clock, gather three essential pieces of critical system context in a centralized scratchpad:
+1. **Core Requirements**: The essential user stories (e.g., three primary actions).
+2. **System Constraints**: Throughput targets (e.g., 5,000 requests/minute), budget, and compliance rules like WCAG 2.1 AA accessibility.
+3. **Data Profile**: Read/write ratios and retention limits.
+
+With these parameters clear, disable Slack, open your editor, and start the timer.
+
+## Phase 1: Problem Definition and Concrete Constraints (Minutes 0–30)
+
+Spend the first 30 minutes defining the problem and boundaries. Avoid vague goals like 'secure the API.' Use precise metrics: 'Implement verification for external webhooks to prevent replay attacks, keeping overhead under 10ms.' Document constraints programmatically. Here is the TypeScript middleware for verifying signatures that we wrote in our design doc:
+
+```typescript
+import { Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
+
+export function verifySignature(secret: string) {
+  return (req: Request & { rawBody?: Buffer }, res: Response, next: NextFunction) => {
+    const sig = req.headers['x-signature'] as string;
+    const ts = req.headers['x-timestamp'] as string;
+    if (!sig || !ts) return res.status(401).json({ error: 'Unauthorized' });
+
+    const now = Math.floor(Date.now() / 1000);
+    if (Math.abs(now - parseInt(ts, 10)) > 300) {
+      return res.status(401).json({ error: 'Expired' });
+    }
+
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(`${ts}.${req.rawBody?.toString() || ''}`);
+    const expected = hmac.digest('hex');
+
+    if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+      return res.status(401).json({ error: 'Invalid' });
+    }
+    next();
+  };
+}
+```
+
+This code snippet eliminated hours of meetings regarding header formats.
+
+## Phase 2: Core Architecture and Interfaces (Minutes 30–80)
+
+You have 50 minutes to outline the core architecture. Avoid complex UML diagrams; use tables and sequence text. Focus on interface boundaries. If services communicate asynchronously, outline event payloads. If implementing rate limiting at the gateway, document the Redis schema. To prevent race conditions, we specified a sliding-window rate limiter using a Redis Lua script to guarantee atomicity:
+
+```typescript
+import Redis from 'ioredis';
+const redis = new Redis();
+
+const LUA_LIMITER = `
+local key = KEYS[1]
+local now = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+local limit = tonumber(ARGV[3])
+redis.call('ZREMRANGEBYSCORE', key, 0, now - window)
+if redis.call('ZCARD', key) < limit then
+  redis.call('ZADD', key, now, now)
+  redis.call('EXPIRE', key, math.ceil(window / 1000))
+  return 1
+end
+return 0
+`;
+
+export async function checkLimit(ip: string, limit: number, windowSec: number): Promise<boolean> {
+  const res = await redis.eval(LUA_LIMITER, 1, `limit:${ip}`, Date.now().toString(), (windowSec * 1000).toString(), limit.toString());
+  return res !== 1;
+}
+```
+
+This code snippet serves as the contract. Backend, frontend, and QA engineers can implement and test it immediately.
+
+## Phase 3: Failure Modes, Trade-Offs, and Operations (Minutes 80–120)
+
+A design doc must cover failure scenarios. Spend 40 minutes documenting trade-offs and operations. Choosing PostgreSQL over MongoDB trades write scalability for transactional consistency. Document these decisions. Also address runtime issues. In high-load Node.js services, memory fragmentation often triggers OOM crashes. The fix is tuning the allocator. For our event pipeline, we preloaded `jemalloc` in Docker to ensure aggressive memory reclamation:
+
+```dockerfile
+FROM node:20-alpine AS runner
+WORKDIR /app
+RUN apk add --no-cache jemalloc
+ENV NODE_ENV=production
+ENV LD_PRELOAD=/usr/lib/libjemalloc.so.2
+ENV MALLOC_CONF=background_thread:true,dirty_decay_ms:1000
+COPY . .
+EXPOSE 3000
+CMD ["node", "dist/main.js"]
+```
+
+Specifying this custom runtime container configuration early prevents costly production deployment surprises.
+
+## Key Takeaways: Speed as a Design Pattern
+
+Writing a design doc in 2 hours is not about cutting corners; it is about recognizing that running code is the ultimate validation. A document only proves your design works on paper.
+
+By time-boxing your documentation, you avoid analysis paralysis, establish interface contracts early, and build a culture of rapid execution. Use this checklist:
+*   **Timebox aggressively**: Set a 2-hour timer and focus on the hardest 20% of the system.
+*   **Code over prose**: Use concrete code snippets instead of dry text explanations.
+*   **Design for failure**: Document exactly how the system degrades and rate-limits.
+*   **Seek alignment**: Use the document to get your team on the same page, then build.
