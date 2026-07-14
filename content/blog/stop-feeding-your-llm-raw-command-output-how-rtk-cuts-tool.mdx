@@ -1,0 +1,140 @@
+---
+title: "Stop Feeding Your LLM Raw Command Output: How RTK Cuts Tool Tokens by 60–90%"
+date: "2026-07-14"
+excerpt: "Caveman compresses what agents say. RTK compresses what they read — filtering git, tests, and ls before that noise burns your context window. Here's how I wired it into Cursor and Claude Code."
+tags: [ai-engineering, developer-productivity, tooling, claude-code, token-optimization]
+readTime: "5 min read"
+coverImage: "/images/blog/stop-feeding-your-llm-raw-command-output-how-rtk-cuts-tool.png"
+published: true
+---
+
+## The Context Window Was Dying on `git status`
+
+I already knew how to shrink **agent replies**. Caveman mode cut filler from what the model *said*. That helped — until I watched a single debugging loop chew through context on the *other* side of the pipe.
+
+The agent ran `git status`, then `git diff`, then `npm test`. Each command returned the full, human-oriented dump: permission bits, progress bars, passing tests, “Enumerating objects…” — thousands of tokens of noise the model did not need to reason. By the time we hit the actual failure, half the window was landfill.
+
+That is the problem [RTK](https://github.com/rtk-ai/rtk) (Rust Token Killer) solves. It is a **CLI proxy**: same commands, filtered output, **60–90% fewer tokens** on common tool calls — before anything reaches the LLM.
+
+> Caveman optimizes output tokens. RTK optimizes tool-output tokens. You want both.
+
+## What RTK Actually Does
+
+RTK sits between the agent’s shell and the real binary. You (or a hook) run `rtk git status` instead of `git status`. RTK executes the real command, then applies four strategies per command family:
+
+1. **Smart filtering** — drop comments, whitespace noise, boilerplate banners
+2. **Grouping** — cluster files by directory, errors by type
+3. **Truncation** — keep the signal, cut redundancy
+4. **Deduplication** — collapse repeated log lines with counts
+
+On a medium TypeScript/Rust project, their session estimate looks roughly like this:
+
+| Operation | Standard | With RTK | Savings |
+|-----------|----------|----------|---------|
+| `ls` / tree | 2,000 | 400 | −80% |
+| `git status` | 3,000 | 600 | −80% |
+| `git diff` | 10,000 | 2,500 | −75% |
+| test runners | 25,000 | 2,500 | −90% |
+| **Session total** | **~118k** | **~24k** | **~−80%** |
+
+Those numbers match what I felt in practice: the agent still *sees* failures and changed files — it just stops rereading the same “ok” noise every turn.
+
+## Install Once, Wire to Your Agent
+
+I use Homebrew on macOS:
+
+```bash
+brew install rtk
+rtk --version   # expect something like rtk 0.28+
+rtk gain        # empty until you start routing commands through it
+```
+
+**Name collision warning:** crates.io also has an unrelated “rtk” (Rust Type Kit). If `rtk gain` fails after a Cargo install, you grabbed the wrong package. Prefer Homebrew or `cargo install --git https://github.com/rtk-ai/rtk`.
+
+Then point your agent at it:
+
+```bash
+# Claude Code / Copilot (default)
+rtk init -g
+
+# Cursor
+rtk init -g --agent cursor
+
+# Gemini CLI / Codex
+rtk init -g --gemini
+rtk init -g --codex
+```
+
+Restart the tool. Hook-based agents rewrite Bash calls transparently — `git status` becomes `rtk git status` before execution. The model gets compact output without changing how you prompt.
+
+**Gotcha that matters:** on Claude Code, the hook only covers **Bash tool** calls. Built-in `Read`, `Grep`, and `Glob` bypass it. For those paths, either shell out (`rg`, `cat`) or call `rtk read` / `rtk grep` / `rtk find` explicitly.
+
+## The Commands That Paid Off First
+
+I did not wrap everything on day one. I started with the three commands that dominate agent loops in my stack:
+
+**Git (status/diff/log)** — compact status, condensed diffs, one-line logs. Mutating commands collapse to receipts like `ok abc1234` instead of a 15-line push novel.
+
+```bash
+rtk git status
+rtk git diff
+rtk git log -n 10
+# push/commit become short receipts: "ok main", "ok abc1234"
+```
+
+**Tests (failures only)** — Jest, Vitest, Playwright, pytest, cargo test, and a generic `rtk test <cmd>` wrapper. Passing suites shrink to near-nothing; failures stay readable.
+
+```bash
+rtk vitest
+rtk playwright test
+rtk test npm test   # generic: failures only (~−90%)
+```
+
+**Lint / typecheck** — ESLint grouped by rule/file, `tsc` errors grouped by file. The agent jumps to the cluster instead of scrolling a wall of identical rule names.
+
+When a filtered command **fails**, RTK can tee the raw output to disk so the model can open the full log without re-running the suite — important for flaky CI debugging.
+
+```bash
+# ~/.config/rtk/config.toml (macOS: ~/Library/Application Support/rtk/)
+[tee]
+enabled = true
+mode = "failures"   # "failures" | "always" | "never"
+
+[hooks]
+exclude_commands = ["curl", "playwright"]  # skip rewrite when you need raw output
+```
+
+## How This Changed My Agent Workflow
+
+On enterprise client work — React/Node streams with heavy test and lint loops — I treat RTK as **platform plumbing**, not a personal tip.
+
+**Before:** agents spent turns re-digesting full `git status` and green test spam. Context filled with noise. I burned tokens (and patience) asking the same “what actually failed?” clarifying questions.
+
+**After:** the default shell path is compressed. I keep deep-work prompts focused on *decisions*; the tooling stops flooding the window. Combined with reply compression (Caveman) and disciplined agent PR review, token spend becomes a **stack**:
+
+![Token compression stack: agent speech, tool stdout via RTK, and human judgment](./inline-image-1.png)
+
+| Layer | What it compresses | Tool |
+|-------|--------------------|------|
+| Agent speech | Output tokens / filler | Caveman (or similar) |
+| Tool stdout | Command dumps into context | **RTK** |
+| Human judgment | What merges / what ships | Review checklists, not more tokens |
+
+I also run `rtk gain` and `rtk discover` weekly — same instinct as checking observability dashboards. If a high-frequency command shows 0% savings, it is either excluded or needs a filter. That is how you turn a shiny CLI into a durable DevEx default.
+
+```bash
+rtk gain              # summary
+rtk gain --graph      # last 30 days
+rtk discover --since 7
+```
+
+## Key Takeaways
+
+- **Tool output is half the token bill.** Shrinking replies without filtering `git`/`test`/`ls` leaves the expensive half untouched.
+- **RTK is a transparent proxy**, not a new workflow language — hooks rewrite shell commands for Claude Code, Cursor, Gemini, Codex, and more.
+- **Start with git + tests + lint.** Those dominate agent loops; 60–90% savings show up immediately.
+- **Know the hook boundary.** Built-in Read/Grep/Glob may bypass rewrite — use shell or explicit `rtk` commands when you care.
+- **Measure adoption.** `rtk gain` / `rtk discover` turn token savings from a README claim into a weekly habit.
+- Pair with reply compression and strong review judgment — RTK saves context; it does not replace architecture or “should this merge?”
+
+Raw command output was never designed for LLMs. Stop treating it like it was.
