@@ -59,13 +59,14 @@ describe('experience', () => {
 
   it('first item is the most recent (Incubyte)', () => {
     expect(experience[0].company).toBe('Incubyte')
-    expect(experience[0].isCurrent).toBe(true)
+    expect(experience[0].isCurrent).toBe(false)
+    expect(experience[0].endDate).toBe('2026-05')
+    expect(experience[0].period).toBe('Sep 2024 – May 2026')
   })
 
-  it('most recent item has no endDate of "present"', () => {
+  it('has no current role marked present', () => {
     const current = experience.find((e) => e.isCurrent)
-    expect(current).toBeDefined()
-    expect(current?.endDate).toBe('present')
+    expect(current).toBeUndefined()
   })
 
   it('non-current items have proper endDate format', () => {
