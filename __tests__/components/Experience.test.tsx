@@ -29,9 +29,14 @@ describe('Experience', () => {
     expect(roles.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('renders "Current" badge for Incubyte', () => {
+  it('does not render Current badge when no role is current', () => {
     render(<Experience />)
-    expect(screen.getByText('Current')).toBeInTheDocument()
+    expect(screen.queryByText('Current')).not.toBeInTheDocument()
+  })
+
+  it('renders Incubyte end period through May 2026', () => {
+    render(<Experience />)
+    expect(screen.getByText(/Sep 2024 – May 2026/)).toBeInTheDocument()
   })
 
   it('renders achievement lists with aria-label', () => {

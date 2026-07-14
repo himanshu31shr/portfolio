@@ -30,12 +30,12 @@ export const experience: ExperienceItem[] = [
   {
     company: 'Incubyte',
     role: 'Senior Software Engineer',
-    period: 'Sep 2024 – Present',
+    period: 'Sep 2024 – May 2026',
     startDate: '2024-09',
-    endDate: 'present',
-    isCurrent: true,
+    endDate: '2026-05',
+    isCurrent: false,
     achievements: [
-      'Lead full-stack development of enterprise applications using React.js, Node.js, and Python, delivering 14+ scalable features across front-end and backend systems for 3 tier-1 client engagements.',
+      'Led full-stack development of enterprise applications using React.js, Node.js, and Python, delivering 14+ scalable features across front-end and backend systems for 3 tier-1 client engagements.',
       'Spearheaded WCAG 2.1 AA accessibility initiatives across key client projects, authoring 40+ engineering standards and reducing compliance risk by 100% for broader user segments.',
       'Shifted accessibility checks left by independently integrating ESLint accessibility rules and AI-based PR review workflows, cutting production A11y bugs by 45% earlier in the development life-cycle.',
       'Owned on-call responsibilities for production systems and helped the team adopt effective incident handling practices, reducing Mean Time to Resolution (MTTR) by 35%.',
