@@ -142,6 +142,8 @@ export const skillCategories: SkillCategory[] = [
       'Redux',
       'Redux Toolkit',
       'Electron',
+      'Micro-frontends',
+      'Design Systems',
     ],
   },
   {
@@ -195,7 +197,7 @@ export const skillCategories: SkillCategory[] = [
   {
     name: 'Data & Observability',
     icon: 'BarChart3',
-    skills: ['Airflow', 'Superset', 'NewRelic', 'CloudWatch', 'Datadog', 'Mixpanel'],
+    skills: ['Airflow', 'Superset', 'NewRelic', 'CloudWatch', 'Datadog', 'Sentry', 'Mixpanel', 'LaunchDarkly'],
   },
   {
     name: 'AI Engineering',
