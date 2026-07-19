@@ -321,6 +321,24 @@ export const projects: ProjectItem[] = [
       'Automated end-to-end tournament lifecycle management',
     ],
   },
+  {
+    name: 'LinkedIn MCP Server',
+    slug: 'linkedin-mcp-server',
+    tagline: 'MCP tools for LinkedIn inside AI IDEs',
+    description:
+      'Published TypeScript MCP server exposing LinkedIn OAuth and profile, content, org, and analytics APIs as agent tools.',
+    techStack: ['TypeScript', 'MCP SDK', 'Zod', 'OAuth 2.0', 'Vitest', 'MSW'],
+    highlights: [
+      'Published @himanshu31shr/linkedin-mcp-server for Claude Desktop, Cursor, and other MCP hosts.',
+      'Implemented 20 tools across profile, posts, media, organizations, social actions, and org analytics.',
+      'Shipped Vitest + MSW coverage with tag-based npm publish and provenance.',
+    ],
+    metrics: [
+      'Published npm package @himanshu31shr/linkedin-mcp-server',
+      '20 MCP tools across LinkedIn API domains',
+      'Vitest + MSW coverage and npm provenance publish',
+    ],
+  },
 ]
 
 export interface EducationItem {

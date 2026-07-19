@@ -16,6 +16,8 @@ export interface CaseStudyMeta {
   readTime: string
   coverImage: string
   published: boolean
+  repoUrl: string
+  npmUrl: string
 }
 
 export interface CaseStudy {
@@ -36,6 +38,8 @@ function parseMeta(slug: string, data: Record<string, unknown>): CaseStudyMeta {
     readTime: (data.readTime as string) ?? '',
     coverImage: (data.coverImage as string) ?? '',
     published: (data.published as boolean) ?? false,
+    repoUrl: (data.repoUrl as string) ?? '',
+    npmUrl: (data.npmUrl as string) ?? '',
   }
 }
 

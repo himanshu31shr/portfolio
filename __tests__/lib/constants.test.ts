@@ -136,8 +136,8 @@ describe('resumeDownloads', () => {
 })
 
 describe('projects', () => {
-  it('has exactly 3 projects', () => {
-    expect(projects).toHaveLength(3)
+  it('has exactly 4 projects', () => {
+    expect(projects).toHaveLength(4)
   })
 
   it('each project has required fields', () => {
@@ -165,11 +165,16 @@ describe('projects', () => {
     expect(projects.map((p) => p.name)).toContain('Multi-Channel Tournament Bot')
   })
 
+  it('contains LinkedIn MCP Server', () => {
+    expect(projects.map((p) => p.name)).toContain('LinkedIn MCP Server')
+  })
+
   it('maps each project to a case study slug', () => {
     expect(projects.map((p) => p.slug)).toEqual([
       'credit-ops-automation',
       'procurement-performance-suite',
       'multi-channel-tournament-bot',
+      'linkedin-mcp-server',
     ])
   })
 })

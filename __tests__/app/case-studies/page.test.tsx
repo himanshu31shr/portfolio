@@ -20,6 +20,8 @@ const MOCK_STUDIES = [
     readTime: '8 min read',
     coverImage: '',
     published: true,
+    repoUrl: '',
+    npmUrl: '',
   },
 ]
 

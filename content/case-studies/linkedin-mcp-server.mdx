@@ -1,0 +1,195 @@
+---
+title: "LinkedIn MCP Server"
+date: "2026-07-20"
+excerpt: "How I designed and published a TypeScript MCP server that gives AI agents real LinkedIn tools — OAuth, 20 API capabilities, Vitest/MSW coverage, and npm provenance."
+clientRole: "Open-source AI developer tooling"
+role: "Senior Full Stack Engineer"
+techStack: ["TypeScript", "MCP SDK", "Zod", "OAuth 2.0", "Vitest", "MSW", "Pino"]
+metrics:
+  - "Published npm package @himanshu31shr/linkedin-mcp-server"
+  - "20 MCP tools spanning profile, content, orgs, and analytics"
+  - "Vitest + MSW unit/integration coverage with npm provenance publish"
+published: true
+readTime: "14 min read"
+coverImage: ""
+repoUrl: "https://github.com/himanshu31shr/linkedin-mcp-server"
+npmUrl: "https://www.npmjs.com/package/@himanshu31shr/linkedin-mcp-server"
+---
+
+## Context
+
+AI coding agents are useful when they can **act** — not just talk. Model Context Protocol (MCP) is the thin contract that turns an IDE agent into something that can call tools: read a profile, draft a post, comment, pull org analytics.
+
+LinkedIn is one of the highest-leverage surfaces for that pattern. A hiring manager, founder, or open-source maintainer living inside Cursor or Claude Desktop still has to context-switch to LinkedIn for profile checks, posts, and page metrics. That break kills flow.
+
+I built and published **`@himanshu31shr/linkedin-mcp-server`** — a TypeScript MCP server that exposes LinkedIn’s API as first-class agent tools, with a real OAuth path, structured schemas, and a publish pipeline suitable for an npm package other people can `npx` without cloning.
+
+> Repository: [github.com/himanshu31shr/linkedin-mcp-server](https://github.com/himanshu31shr/linkedin-mcp-server)  
+> Package: [@himanshu31shr/linkedin-mcp-server](https://www.npmjs.com/package/@himanshu31shr/linkedin-mcp-server)
+
+## Constraints
+
+- **External API surface** — LinkedIn’s REST APIs, URNs, media upload flow, and org endpoints are not designed around chat agents. Tool shapes had to feel natural in an IDE while staying faithful to the API.
+- **Auth is half the product** — without a workable access-token path (portal token *or* local OAuth), nobody installs the package.
+- **Multi-client install** — Claude Desktop, Cursor, and other MCP hosts all expect a `command` + `env` config. Distribution had to favor `npx -y` over “clone and build.”
+- **Trust for automation** — agents can post and delete content. Input validation, clear errors, and test doubles for HTTP matter more than a thin wrapper script.
+- **No fabricated adoption story** — success for this case study is shipping a real package with a coherent architecture and test story, not invented download or star counts.
+
+## Goals
+
+1. Give agents **read/write LinkedIn capabilities** beyond a single “get profile” toy.
+2. Keep the tool layer **typed and schema-driven** so hosts can show safe parameters.
+3. Make install a **one-liner** for MCP clients.
+4. Ship CI/CD that can **publish to npm with provenance** when a version tag moves.
+
+## Approach
+
+I split the server into clear layers instead of one mega `index.ts` of tools:
+
+```text
+MCP Host (Cursor / Claude Desktop / …)
+        │  stdio MCP
+        ▼
+┌─────────────────────────────┐
+│  server.ts — tool registry  │
+│  Zod schemas (inputs)       │
+└─────────────┬───────────────┘
+              │
+              ▼
+┌─────────────────────────────┐
+│  tools/* — one domain each  │
+│  profile · posts · media    │
+│  organization · social      │
+│  org-analytics              │
+└─────────────┬───────────────┘
+              │
+              ▼
+┌─────────────────────────────┐
+│  linkedin-client.ts         │
+│  HTTP + URN helpers + errs  │
+└─────────────────────────────┘
+              │
+              ▼
+         LinkedIn API
+```
+
+**Why this shape:**
+
+| Layer | Responsibility |
+|-------|----------------|
+| **Schemas** (`src/schemas/*`) | Zod contracts agents discover as tool parameters |
+| **Tools** (`src/tools/*`) | Map MCP calls → client methods; keep domain language agent-friendly |
+| **Client** (`src/services/linkedin-client.ts`) | Auth header, REST calls, LinkedIn-specific URNs |
+| **Utils** | Errors, logging (Pino), URN helpers shared across tools |
+
+That separation made it possible to unit-test tools against a mocked client and still run integration tests against the registered MCP server.
+
+## Designing the tool surface
+
+A useful LinkedIn MCP is more than “fetch my profile.” The published tool set covers six product domains:
+
+| Domain | Examples |
+|--------|----------|
+| **Profile** | `get_profile`, `get_email` |
+| **Content** | text / link / image / document posts, `delete_post` |
+| **Media** | `upload_image` for post attachments |
+| **Organizations** | org details, org posts, create/delete on behalf of a page |
+| **Social actions** | comments and reactions (like, celebrate, …) |
+| **Org analytics** | page, follower, and share statistics |
+
+That is **20 tools** total — deliberately chosen so an agent can complete common loops (research → draft → publish → engage → measure) without leaving the IDE.
+
+Naming stayed verb-first and boring on purpose: `create_text_post` beats a cute `linkedin_share` when an agent is scanning a tool list under token pressure.
+
+## Auth and local developer experience
+
+Production MCP hosts inject `LINKEDIN_ACCESS_TOKEN`. For contributors (and for myself during development), a portal-only token flow is painful, so the package includes:
+
+```bash
+npm run auth   # scripts/auth.ts — local OAuth helper
+```
+
+That script walks a LinkedIn OAuth flow and writes the token into `.env` so `npm run dev` / `npm run inspect` work without hand-copying secrets on every iteration.
+
+Runtime still stays host-friendly: Claude Desktop and Cursor configs only need:
+
+```json
+{
+  "mcpServers": {
+    "linkedin": {
+      "command": "npx",
+      "args": ["-y", "@himanshu31shr/linkedin-mcp-server"],
+      "env": {
+        "LINKEDIN_ACCESS_TOKEN": "your-linkedin-access-token"
+      }
+    }
+  }
+}
+```
+
+Same pattern works with a global install (`linkedin-mcp-server` bin) or a local `node dist/index.js` for debugging.
+
+## Implementation highlights
+
+### Schema-first parameters
+
+Every tool input is defined with **Zod** under `src/schemas/`. That gives MCP hosts typed argument forms and keeps validation at the edge before any LinkedIn call runs.
+
+### Domain tools over a shared client
+
+Posts, media uploads, org APIs, and analytics all talk through `linkedin-client` rather than raw `fetch` in each tool file. When LinkedIn’s URN conventions or error bodies need a fix, there is one place to change.
+
+### Observability without noise
+
+**Pino** logs operational detail during local runs and failures without dumping tokens. Errors are normalized through shared helpers so agents see actionable messages instead of opaque HTTP dumps.
+
+### MCP Inspector for interactive debugging
+
+`npm run inspect` launches the Model Context Protocol inspector against the built server — faster than round-tripping every tool change through a full IDE config.
+
+## Testing strategy
+
+Third-party APIs punish flaky suites. The test layout mirrors the code:
+
+- **Unit tests** for tools, client behavior, URN helpers, and errors
+- **MSW handlers** (`tests/mocks/`) so LinkedIn HTTP is deterministic
+- **Integration test** that boots the server registration path (`tests/integration/server.test.ts`)
+- **Vitest** for unit/integration; separate e2e config for optional live runs
+
+`prepublishOnly` runs lint (`tsc --noEmit`), tests, and build — the package does not leave the machine unless that gate is green.
+
+## Packaging and release
+
+Publishing mattered as much as the source layout:
+
+1. **Scoped npm package** — `@himanshu31shr/linkedin-mcp-server` with a `bin` entry for `linkedin-mcp-server`
+2. **`npx -y` as the documented default** — zero-clone install for MCP hosts
+3. **CD on version tags** — `npm version patch|minor|major` + push tags triggers:
+   - tag ↔ `package.json` version validation
+   - lint, test, build
+   - npm publish **with provenance**
+   - GitHub Release notes
+
+That makes the release story auditable: consumers can verify how `1.0.1` got onto the registry.
+
+## Results
+
+| Outcome | Detail |
+|--------|--------|
+| Distribution | Published `@himanshu31shr/linkedin-mcp-server` (v1.0.1 at write-up) |
+| Capability | 20 MCP tools across profile, content, media, orgs, social actions, analytics |
+| Quality gate | Vitest + MSW coverage; `prepublishOnly` + CI tag pipeline |
+| Trust | npm provenance on publish; MIT license; public source |
+
+I am not claiming install or GitHub-star vanity metrics here — the measurable ship is a **production-shaped open-source MCP package** other agents can actually configure.
+
+## Takeaways
+
+- **MCP product design is API product design.** Tool names, parameters, and error text are the UX.
+- **Split client / tools / schemas early** if you want tests that survive LinkedIn’s endpoints changing under you.
+- **OAuth DX is part of adoption.** A great tool list with a miserable token story will not get configured twice.
+- **Publish like you mean it.** `npx`, provenance, and a tag-based CD path turn a personal script into something another engineer will paste into `claude_desktop_config.json`.
+
+## What’s next
+
+Natural extensions (when the API products and time allow): richer media workflows, tighter org-permission guidance in tool descriptions, and more host-specific install snippets as MCP client UIs keep evolving. The architecture is intentionally ready for new `src/tools/*` modules without another rewrite.

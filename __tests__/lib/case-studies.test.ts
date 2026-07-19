@@ -27,6 +27,8 @@ metrics:
 published: true
 readTime: "8 min read"
 coverImage: ""
+repoUrl: "https://github.com/example/repo"
+npmUrl: "https://www.npmjs.com/package/example"
 ---
 
 # Body content
@@ -95,6 +97,8 @@ describe('case-studies utilities', () => {
       expect(studies[0].clientRole).toBe('Consumer credit operations')
       expect(studies[0].techStack).toContain('Node.js')
       expect(studies[0].metrics[0]).toContain('40%')
+      expect(studies[0].repoUrl).toBe('https://github.com/example/repo')
+      expect(studies[0].npmUrl).toBe('https://www.npmjs.com/package/example')
     })
 
     it('sorts by date descending', async () => {
@@ -134,6 +138,8 @@ published: true
       expect(study.metrics).toEqual([])
       expect(study.readTime).toBe('')
       expect(study.coverImage).toBe('')
+      expect(study.repoUrl).toBe('')
+      expect(study.npmUrl).toBe('')
     })
 
     it('filters non-mdx files', async () => {

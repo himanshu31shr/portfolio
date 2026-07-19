@@ -54,6 +54,8 @@ const MOCK_STUDY = {
     readTime: '8 min read',
     coverImage: '/images/case.jpg',
     published: true,
+    repoUrl: '',
+    npmUrl: '',
   },
   content: '# Test Content\n\nThis is the case study body.',
 }
@@ -71,6 +73,8 @@ const MOCK_OTHER = [
     readTime: '7 min read',
     coverImage: '',
     published: true,
+    repoUrl: '',
+    npmUrl: '',
   },
 ]
 
@@ -264,5 +268,39 @@ describe('CaseStudyPage', () => {
 
     expect(screen.getByRole('link', { name: /share on twitter/i })).toBeInTheDocument()
     expect(screen.getByText('Himanshu Shrivastava')).toBeInTheDocument()
+  })
+
+  it('renders GitHub and npm links when provided', async () => {
+    mockCaseStudies.getCaseStudyBySlug.mockReturnValue({
+      ...MOCK_STUDY,
+      meta: {
+        ...MOCK_STUDY.meta,
+        repoUrl: 'https://github.com/himanshu31shr/linkedin-mcp-server',
+        npmUrl: 'https://www.npmjs.com/package/@himanshu31shr/linkedin-mcp-server',
+      },
+    })
+    mockCaseStudies.getAllCaseStudies.mockReturnValue([])
+
+    const { default: CaseStudyPage } = await import('@/app/case-studies/[slug]/page')
+    render(await CaseStudyPage({ params: Promise.resolve({ slug: 'credit-ops-automation' }) }))
+
+    expect(screen.getByRole('link', { name: /view .* on github/i })).toHaveAttribute(
+      'href',
+      'https://github.com/himanshu31shr/linkedin-mcp-server'
+    )
+    expect(screen.getByRole('link', { name: /view .* on npm/i })).toHaveAttribute(
+      'href',
+      'https://www.npmjs.com/package/@himanshu31shr/linkedin-mcp-server'
+    )
+  })
+
+  it('omits project links when repo and npm urls are empty', async () => {
+    mockCaseStudies.getCaseStudyBySlug.mockReturnValue(MOCK_STUDY)
+    mockCaseStudies.getAllCaseStudies.mockReturnValue([])
+
+    const { default: CaseStudyPage } = await import('@/app/case-studies/[slug]/page')
+    render(await CaseStudyPage({ params: Promise.resolve({ slug: 'credit-ops-automation' }) }))
+
+    expect(screen.queryByLabelText('Project links')).not.toBeInTheDocument()
   })
 })

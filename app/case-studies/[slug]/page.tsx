@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import remarkGfm from 'remark-gfm'
-import { Calendar, Clock, ArrowLeft, Briefcase, User } from 'lucide-react'
+import { Calendar, Clock, ArrowLeft, Briefcase, User, ExternalLink, Package } from 'lucide-react'
 import {
   getCaseStudyBySlug,
   getCaseStudySlugs,
@@ -137,6 +137,35 @@ export default async function CaseStudyPage({ params }: PageProps) {
                 {study.meta.readTime}
               </span>
             </div>
+
+            {(study.meta.repoUrl || study.meta.npmUrl) && (
+              <div className="flex flex-wrap gap-3 mb-8" aria-label="Project links">
+                {study.meta.repoUrl && (
+                  <a
+                    href={study.meta.repoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border border-glass-border text-text-secondary hover:text-accent-blue hover:border-accent-blue/40 transition-colors"
+                    aria-label={`View ${study.meta.title} on GitHub (opens in new tab)`}
+                  >
+                    <ExternalLink className="w-4 h-4" aria-hidden="true" />
+                    GitHub
+                  </a>
+                )}
+                {study.meta.npmUrl && (
+                  <a
+                    href={study.meta.npmUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border border-glass-border text-text-secondary hover:text-accent-blue hover:border-accent-blue/40 transition-colors"
+                    aria-label={`View ${study.meta.title} on npm (opens in new tab)`}
+                  >
+                    <Package className="w-4 h-4" aria-hidden="true" />
+                    npm
+                  </a>
+                )}
+              </div>
+            )}
 
             {study.meta.techStack.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-8" aria-label="Tech stack">
