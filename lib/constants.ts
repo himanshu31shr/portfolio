@@ -149,7 +149,15 @@ export const skillCategories: SkillCategory[] = [
   {
     name: 'Testing',
     icon: 'TestTube',
-    skills: ['Jest', 'Vitest', 'Cypress', 'Playwright', 'Mocha', 'Stryker'],
+    skills: [
+      'Jest',
+      'React Testing Library',
+      'Vitest',
+      'Cypress',
+      'Playwright',
+      'Mocha',
+      'Stryker',
+    ],
   },
   {
     name: 'Backend',
@@ -167,6 +175,7 @@ export const skillCategories: SkillCategory[] = [
       'Redis',
       'WebSockets',
       'OpenAPI',
+      'Sequelize',
       'Discord API',
       'WhatsApp API',
     ],
@@ -206,6 +215,7 @@ export const skillCategories: SkillCategory[] = [
       'Claude Code',
       'Cursor',
       'GitHub Copilot',
+      'ChatGPT',
       'MCP',
       'AI-based PR Review',
       'Agentic CI/CD',
