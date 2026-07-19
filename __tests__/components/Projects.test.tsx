@@ -23,6 +23,11 @@ describe('Projects', () => {
     expect(screen.getByText('Multi-Channel Tournament Bot')).toBeInTheDocument()
   })
 
+  it('renders LinkedIn MCP Server project', () => {
+    render(<Projects />)
+    expect(screen.getByText('LinkedIn MCP Server')).toBeInTheDocument()
+  })
+
   it('renders project taglines', () => {
     render(<Projects />)
     expect(screen.getByText(/Automated credit bureau monitoring/i)).toBeInTheDocument()
