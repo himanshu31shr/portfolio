@@ -1,0 +1,80 @@
+---
+title: "Multi-Channel Tournament Bot"
+date: "2026-07-13"
+excerpt: "Architecting a Discord and WhatsApp bot that ran tournament registration, verification, and real-time lifecycle notifications end to end."
+clientRole: "Competitive gaming / esports ops"
+role: "Senior Full Stack Engineer"
+techStack: ["Node.js", "Discord.js", "WhatsApp API", "MongoDB"]
+metrics:
+  - "Real-time communication across two major platforms"
+  - "Automated end-to-end tournament lifecycle management"
+published: true
+readTime: "8 min read"
+coverImage: ""
+---
+
+## Context
+
+Tournament organizers do not live in one chat app. Players register and ask status questions on **Discord** and **WhatsApp** — often in the same event week. This project needed a bot layered onto a tournament management system so registration, verification, and progression updates did not depend on a human pasting the same message into two platforms.
+
+## Constraints
+
+- **Two messaging platforms, one lifecycle** — Discord and WhatsApp have different APIs, rate limits, and UX norms; the tournament state had to stay authoritative.
+- **Time-critical events** — qualification and disqualification notices are useless if they arrive after the next match starts.
+- **Operational clarity** — players needed registration status and progression data without opening a separate admin portal for every question.
+
+## Approach
+
+I designed the bot as a **multi-channel adapter** in front of shared tournament domain services.
+
+```text
+Discord gateway          WhatsApp channel
+      \                       /
+       \                     /
+        v                   v
+     Channel adapters (Node.js)
+                 |
+                 v
+     Tournament management core
+                 |
+                 v
+           MongoDB (state)
+                 |
+                 v
+     Notification dispatcher → Discord / WhatsApp
+```
+
+**Key decisions:**
+
+1. **One domain model, two transports** — registration/verification logic lived once; adapters translated platform payloads into domain commands.
+2. **Event-driven notifications** — lifecycle transitions (qualified / disqualified / status changes) emitted notification jobs instead of embedding send logic in every handler.
+3. **Bot as UX, not source of truth** — MongoDB-backed tournament state owned truth; chat messages were projections.
+
+## Implementation Highlights
+
+### Chatbot integrated with tournament management
+
+Players could interact with a deployed chatbot for registration status and tournament progression data — no siloed scripts that drifted from the management system.
+
+### Discord and WhatsApp integrations
+
+Both platforms supported registration, verification, and real-time communication flows so organizers did not force players onto a single channel.
+
+### Automated lifecycle alerts
+
+Notification systems alerted users on critical events such as qualification and disqualification, tightening the feedback loop and keeping engagement high during live brackets.
+
+## Results
+
+| Outcome | Result |
+|--------|--------|
+| Channel coverage | Real-time communication across Discord and WhatsApp |
+| Ops model | Automated end-to-end tournament lifecycle management |
+
+Quantified latency or volume figures were not the primary success metrics here; reliability of multi-channel lifecycle automation was.
+
+## Takeaways
+
+- **Adapters beat dual implementations** when two chat platforms must share one tournament state machine.
+- **Notifications are part of the product** — qualification events without automated delivery recreate the manual ops problem the bot was meant to remove.
+- **Keep chat ephemeral, state durable** — MongoDB (or equivalent) as source of truth prevents Discord/WhatsApp history from becoming the database.

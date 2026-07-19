@@ -44,6 +44,20 @@ describe('ShareBar', () => {
     expect(writeText).toHaveBeenCalledWith('https://example.com/blog/test-post')
   })
 
+  it('uses pathPrefix for case study share URLs', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.assign(navigator, { clipboard: { writeText } })
+
+    render(
+      <ShareBar title="Case Study" slug="credit-ops-automation" pathPrefix="case-studies" />
+    )
+    fireEvent.click(screen.getByRole('button', { name: /copy link/i }))
+
+    expect(writeText).toHaveBeenCalledWith(
+      'https://example.com/case-studies/credit-ops-automation'
+    )
+  })
+
   it('shows Copied! after clicking copy', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     Object.assign(navigator, { clipboard: { writeText } })

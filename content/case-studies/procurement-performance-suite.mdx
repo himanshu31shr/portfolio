@@ -1,0 +1,70 @@
+---
+title: "Procurement Performance Suite"
+date: "2026-07-14"
+excerpt: "Scaling a Node.js / Rails / React procurement platform under heavy front-end load — and cutting response time by 50%."
+clientRole: "Enterprise procurement"
+role: "Senior Full Stack Engineer"
+techStack: ["React", "Node.js", "Ruby on Rails", "PostgreSQL"]
+metrics:
+  - "50% improvement in response time"
+  - "Improved user satisfaction and engagement"
+published: true
+readTime: "7 min read"
+coverImage: ""
+---
+
+## Context
+
+Procurement tooling sits in an awkward spot: dense tables, multi-step RFQ flows, permission-heavy roles, and users who expect desktop-app responsiveness inside a browser. This suite combined **Node.js**, **Ruby on Rails**, and **React** to run procurement workflows for teams that leaned hard on the front end.
+
+My work centered on keeping the product usable under heavy UI workload — feature delivery, issue resolution, and front-end performance — not greenfield replacement of the stack.
+
+## Constraints
+
+- **Polyglot surface** — React UI talking to Rails- and Node-backed capabilities meant performance issues could hide in multiple layers.
+- **Heavy front-end workloads** — large datasets, interactive grids, and frequent updates made naive render and fetch patterns painful.
+- **Live customer pressure** — feature requests and production issues arrived on the same cadence as scaling work; neither could wait for a rewrite.
+
+## Approach
+
+I prioritized **measurable interaction latency** and steady delivery over a architectural rewrite.
+
+```text
+React SPA
+   ├─ optimized data fetching / render paths
+   ├─ UI performance fixes (list virtualization pressures, reduce re-renders)
+   └─ API calls → Node.js / Rails → PostgreSQL
+```
+
+**Key decisions:**
+
+1. **Front-end first where users felt pain** — response-time complaints mapped to React rendering and chatty API usage more often than raw DB capacity.
+2. **Stabilize while shipping** — customer features and bugfixes continued; performance work landed as focused passes rather than a freeze.
+3. **Preserve the polyglot boundary** — invest in the hot UI path and query/contract hygiene instead of consolidating frameworks mid-flight.
+
+## Implementation Highlights
+
+### Feature throughput under load
+
+Customer feature requests, issue resolution, and scaling work ran in parallel. The front end remained the primary optimization surface because that is where heavy workloads showed up for procurement operators.
+
+### Response-time cut
+
+UI and front-end performance work reduced response time by **50%**. That combined cleaner data loading, fewer redundant renders, and interface improvements that shortened time-to-interactive feedback for common flows.
+
+### Experience over vanity metrics
+
+Alongside the latency win, the engagement signal that mattered was practical: operators spent less time waiting on dense procurement screens, which showed up as improved satisfaction and engagement with the product.
+
+## Results
+
+| Outcome | Result |
+|--------|--------|
+| Response time | −50% |
+| User satisfaction / engagement | Improved (qualitative + observed usage) |
+
+## Takeaways
+
+- **In polyglot apps, measure the path the user waits on** — often the React layer and its API shape, not only the slowest SQL query.
+- **You can scale a procurement UI without a rewrite** if you treat feature delivery and performance as one backlog with shared acceptance criteria.
+- **50% response-time wins** usually come from removing work (extra fetches, over-rendering), not from buying faster CPUs.

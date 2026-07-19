@@ -114,6 +114,27 @@ describe('Navbar', () => {
     vi.mocked(usePathname).mockRestore()
   })
 
+  it('hides hash links when on the case studies page', () => {
+    vi.mocked(usePathname).mockReturnValue('/case-studies')
+
+    render(<Navbar />)
+
+    expect(screen.queryByRole('link', { name: /about/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /case studies/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /writing/i })).toBeInTheDocument()
+    vi.mocked(usePathname).mockRestore()
+  })
+
+  it('marks Case Studies as active on nested case study routes', () => {
+    vi.mocked(usePathname).mockReturnValue('/case-studies/credit-ops-automation')
+
+    render(<Navbar />)
+
+    const caseStudiesLink = screen.getByRole('link', { name: /case studies/i })
+    expect(caseStudiesLink).toHaveAttribute('aria-current', 'page')
+    vi.mocked(usePathname).mockRestore()
+  })
+
   it('hides hash links in mobile menu when on the blog page', () => {
     vi.mocked(usePathname).mockReturnValue('/blog/some-post')
     

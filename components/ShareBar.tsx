@@ -6,14 +6,16 @@ import { Globe, Link as LinkIcon, Check } from 'lucide-react'
 interface ShareBarProps {
   title: string
   slug: string
+  /** URL segment before the slug. Defaults to blog posts. */
+  pathPrefix?: string
 }
 
-export function ShareBar({ title, slug }: ShareBarProps) {
+export function ShareBar({ title, slug, pathPrefix = 'blog' }: ShareBarProps) {
   const [copied, setCopied] = useState(false)
 
   /* istanbul ignore next */
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-  const postUrl = `${baseUrl}/blog/${slug}`
+  const postUrl = `${baseUrl}/${pathPrefix}/${slug}`
   const encodedTitle = encodeURIComponent(title)
   const encodedUrl = encodeURIComponent(postUrl)
 

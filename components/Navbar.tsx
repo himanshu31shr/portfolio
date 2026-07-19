@@ -65,11 +65,17 @@ export function Navbar() {
           {/* Desktop nav links */}
           <ul className="hidden md:flex items-center gap-6" role="list">
             {navLinks
-              .filter((link) => !(pathname.startsWith('/blog') && link.href.startsWith('#')))
+              .filter(
+                (link) =>
+                  !(
+                    (pathname.startsWith('/blog') || pathname.startsWith('/case-studies')) &&
+                    link.href.startsWith('#')
+                  )
+              )
               .map((link) => {
               const isActive = link.href.startsWith('#')
                 ? false
-                : pathname === link.href
+                : pathname === link.href || pathname.startsWith(`${link.href}/`)
               return (
                 <li key={link.label}>
                   <Link
@@ -110,7 +116,13 @@ export function Navbar() {
           >
             <ul className="flex flex-col py-4 px-4 gap-1" role="list">
               {navLinks
-                .filter((link) => !(pathname.startsWith('/blog') && link.href.startsWith('#')))
+                .filter(
+                  (link) =>
+                    !(
+                      (pathname.startsWith('/blog') || pathname.startsWith('/case-studies')) &&
+                      link.href.startsWith('#')
+                    )
+                )
                 .map((link) => (
                 <li key={link.label}>
                   <Link

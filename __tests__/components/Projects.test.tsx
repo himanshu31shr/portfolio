@@ -8,19 +8,19 @@ describe('Projects', () => {
     expect(screen.getByRole('heading', { name: /projects/i })).toBeInTheDocument()
   })
 
-  it('renders Credit Repair CRM project', () => {
+  it('renders Credit Ops Automation Platform project', () => {
     render(<Projects />)
-    expect(screen.getByText('Credit Repair CRM')).toBeInTheDocument()
+    expect(screen.getByText('Credit Ops Automation Platform')).toBeInTheDocument()
   })
 
-  it('renders MarketDojo project', () => {
+  it('renders Procurement Performance Suite project', () => {
     render(<Projects />)
-    expect(screen.getByText('MarketDojo')).toBeInTheDocument()
+    expect(screen.getByText('Procurement Performance Suite')).toBeInTheDocument()
   })
 
-  it('renders TourneyBot / Manager project', () => {
+  it('renders Multi-Channel Tournament Bot project', () => {
     render(<Projects />)
-    expect(screen.getByText('TourneyBot / Manager')).toBeInTheDocument()
+    expect(screen.getByText('Multi-Channel Tournament Bot')).toBeInTheDocument()
   })
 
   it('renders project taglines', () => {
@@ -30,7 +30,7 @@ describe('Projects', () => {
 
   it('renders project descriptions', () => {
     render(<Projects />)
-    expect(screen.getByText(/monitor credit reports of users/i)).toBeInTheDocument()
+    expect(screen.getByText(/monitor credit reports across bureaus/i)).toBeInTheDocument()
   })
 
   it('renders key metrics section', () => {
@@ -58,5 +58,21 @@ describe('Projects', () => {
   it('has correct section id', () => {
     render(<Projects />)
     expect(document.querySelector('section#projects')).toBeInTheDocument()
+  })
+
+  it('links each project card to its case study', () => {
+    render(<Projects />)
+    const link = screen.getByRole('link', {
+      name: /read case study: credit ops automation platform/i,
+    })
+    expect(link).toHaveAttribute('href', '/case-studies/credit-ops-automation')
+  })
+
+  it('links to the case studies listing', () => {
+    render(<Projects />)
+    expect(screen.getByRole('link', { name: /view all case studies/i })).toHaveAttribute(
+      'href',
+      '/case-studies'
+    )
   })
 })
