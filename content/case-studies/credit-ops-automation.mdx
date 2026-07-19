@@ -1,0 +1,84 @@
+---
+title: "Credit Ops Automation Platform"
+date: "2026-07-15"
+excerpt: "How async workflow triggers and bureau-driven sequences cut manual credit-ops work by 40% and doubled sales capacity."
+clientRole: "Consumer credit operations"
+role: "Senior Full Stack Engineer"
+techStack: ["Node.js", "React", "MySQL", "RabbitMQ", "Redis"]
+metrics:
+  - "40% reduction in manual intervention"
+  - "50% reduction in system load via async triggers"
+  - "60% increase in client handling capacity"
+published: true
+readTime: "8 min read"
+coverImage: ""
+---
+
+## Context
+
+Credit operations teams live inside bureau pull cycles: report arrives, someone reads it, someone decides what to dispute or correct, someone kicks off a sequence of follow-ups. When that loop is manual, every new client adds linear headcount — and every bureau format quirk becomes another spreadsheet column.
+
+This engagement needed a platform that could **monitor credit reports across bureaus**, apply corrections, and drive defined sequences without an ops person babysitting every case.
+
+## Constraints
+
+- **Heterogeneous bureau data** — different report shapes, update cadences, and failure modes.
+- **Ops throughput** — sales needed to manage many clients in parallel without multiplying manual steps.
+- **Load sensitivity** — synchronous “fire everything on report ingest” would spike database and worker load as volume grew.
+- **Workflow variability** — infinite combinations of user cases; hard-coding one happy path was not enough.
+
+## Approach
+
+I treated each bureau report event as a **signal**, not a finished workflow.
+
+```text
+Bureau ingest → validate / normalize → enqueue trigger
+                                      ↓
+                         Redis / RabbitMQ consumers
+                                      ↓
+                    Workflow engine (sequence steps)
+                                      ↓
+                         CRM UI (React) + MySQL state
+```
+
+**Key decisions:**
+
+1. **Async triggers over request-path side effects** — report processing published events; workers owned sequence initiation. That kept ingest APIs responsive and allowed retries without replaying the whole HTTP request.
+2. **Data-driven workflow definitions** — sequences were configured from report-derived conditions rather than one-off scripts, so new user cases did not require new deploy pipelines for every variant.
+3. **CRM as the control surface** — React clients showed status and allowed operators to intervene only where automation was incomplete.
+
+Stack fit: **Node.js** services for ingest and workers, **MySQL** for durable case/workflow state, **RabbitMQ** for durable fan-out, **Redis** for hot coordination/caching, **React** for the operator UI.
+
+## Implementation Highlights
+
+### Bureau-driven automated sequences
+
+Automated triggers initiated defined sequences from bureau report data. Instead of an agent deciding “start dispute path A,” matching report conditions started the right path — cutting **manual intervention by 40%**.
+
+### Infinite user cases without infinite manual setup
+
+Manual workflow creation was a bottleneck. Automating workflow generation for open-ended user cases removed that setup tax and shifted effort to exceptions rather than every onboard.
+
+### Async load shedding
+
+Moving initiation onto asynchronous triggers reduced synchronous system load by **50%**. Peak bureau sync windows no longer forced the API tier to also run every downstream action inline.
+
+### Sales capacity unlock
+
+With sequences running and clients manageable in parallel, sales handling capacity increased by **60%** — the same team could work more accounts with minimal manual intervention.
+
+## Results
+
+| Outcome | Result |
+|--------|--------|
+| Manual intervention | −40% |
+| System load from trigger path | −50% via async |
+| Client handling capacity | +60% |
+
+These are the measured outcomes from the shipping system — not projections.
+
+## Takeaways
+
+- **Event the handoff.** Bureau ingest and workflow execution have different failure domains; a queue between them keeps both honest.
+- **Config beats custom deploys** when “infinite user cases” is a real ops requirement.
+- **Throughput metrics matter to sales.** Automation that only looks good in latency charts but does not raise concurrent client capacity is unfinished product work.

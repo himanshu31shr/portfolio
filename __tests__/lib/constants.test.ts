@@ -143,6 +143,7 @@ describe('projects', () => {
   it('each project has required fields', () => {
     projects.forEach((project: ProjectItem) => {
       expect(project.name).toBeTruthy()
+      expect(project.slug).toBeTruthy()
       expect(project.tagline).toBeTruthy()
       expect(project.description).toBeTruthy()
       expect(project.techStack).toBeInstanceOf(Array)
@@ -152,16 +153,24 @@ describe('projects', () => {
     })
   })
 
-  it('contains Credit Repair CRM', () => {
-    expect(projects.map((p) => p.name)).toContain('Credit Repair CRM')
+  it('contains Credit Ops Automation Platform', () => {
+    expect(projects.map((p) => p.name)).toContain('Credit Ops Automation Platform')
   })
 
-  it('contains MarketDojo', () => {
-    expect(projects.map((p) => p.name)).toContain('MarketDojo')
+  it('contains Procurement Performance Suite', () => {
+    expect(projects.map((p) => p.name)).toContain('Procurement Performance Suite')
   })
 
-  it('contains TourneyBot / Manager', () => {
-    expect(projects.map((p) => p.name)).toContain('TourneyBot / Manager')
+  it('contains Multi-Channel Tournament Bot', () => {
+    expect(projects.map((p) => p.name)).toContain('Multi-Channel Tournament Bot')
+  })
+
+  it('maps each project to a case study slug', () => {
+    expect(projects.map((p) => p.slug)).toEqual([
+      'credit-ops-automation',
+      'procurement-performance-suite',
+      'multi-channel-tournament-bot',
+    ])
   })
 })
 
@@ -217,5 +226,11 @@ describe('navLinks', () => {
     const blogLink = navLinks.find((l) => l.label === 'Writing')
     expect(blogLink).toBeDefined()
     expect(blogLink?.href).toBe('/blog')
+  })
+
+  it('contains a Case Studies link', () => {
+    const caseStudiesLink = navLinks.find((l) => l.label === 'Case Studies')
+    expect(caseStudiesLink).toBeDefined()
+    expect(caseStudiesLink?.href).toBe('/case-studies')
   })
 })

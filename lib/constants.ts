@@ -261,6 +261,7 @@ export const resumeDownloads: ResumeDownload[] = [
 
 export interface ProjectItem {
   name: string
+  slug: string
   tagline: string
   description: string
   techStack: string[]
@@ -270,10 +271,11 @@ export interface ProjectItem {
 
 export const projects: ProjectItem[] = [
   {
-    name: 'Credit Repair CRM',
-    tagline: 'Automated credit bureau monitoring & dispute system',
+    name: 'Credit Ops Automation Platform',
+    slug: 'credit-ops-automation',
+    tagline: 'Automated credit bureau monitoring & dispute workflows',
     description:
-      'A system to monitor credit reports of users from different bureaus and provide automated corrections.',
+      'A system to monitor credit reports across bureaus and drive automated corrections and ops sequences.',
     techStack: ['Node.js', 'React', 'MySQL', 'RabbitMQ', 'Redis'],
     highlights: [
       'Implemented automated triggers with custom workflows to initiate defined sequences based on bureau report data.',
@@ -287,7 +289,8 @@ export const projects: ProjectItem[] = [
     ],
   },
   {
-    name: 'MarketDojo',
+    name: 'Procurement Performance Suite',
+    slug: 'procurement-performance-suite',
     tagline: 'Procurement management system at scale',
     description:
       'Node.js / RoR / React-based procurement management system handling heavy front-end workloads.',
@@ -302,10 +305,11 @@ export const projects: ProjectItem[] = [
     ],
   },
   {
-    name: 'TourneyBot / Manager',
+    name: 'Multi-Channel Tournament Bot',
+    slug: 'multi-channel-tournament-bot',
     tagline: 'Cross-platform Discord & WhatsApp tournament bot',
     description:
-      'A cross-functional bot integrated with a tournament management system, deployed on Discord and WhatsApp.',
+      'A cross-platform bot integrated with a tournament management system, deployed on Discord and WhatsApp.',
     techStack: ['Node.js', 'Discord.js', 'WhatsApp API', 'MongoDB'],
     highlights: [
       'Architected and deployed a chatbot integrated with a tournament management system.',
@@ -356,6 +360,7 @@ export const stats = [
 
 export const navLinks = [
   { label: 'Writing', href: '/blog' },
+  { label: 'Case Studies', href: '/case-studies' },
   { label: 'About', href: '#about' },
   { label: 'Experience', href: '#experience' },
   { label: 'Projects', href: '#projects' },
