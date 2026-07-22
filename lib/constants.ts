@@ -142,6 +142,9 @@ export const skillCategories: SkillCategory[] = [
       'Redux',
       'Redux Toolkit',
       'Electron',
+      'PWA',
+      'WebGL',
+      'Three.js',
       'Micro-frontends',
       'Design Systems',
     ],
@@ -190,6 +193,7 @@ export const skillCategories: SkillCategory[] = [
     icon: 'Cloud',
     skills: [
       'AWS',
+      'Microsoft Azure',
       'Docker',
       'Terraform',
       'Azure DevOps',
