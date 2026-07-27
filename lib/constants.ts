@@ -194,6 +194,10 @@ export const skillCategories: SkillCategory[] = [
     skills: [
       'AWS',
       'Microsoft Azure',
+      'Vercel',
+      'Netlify',
+      'Auth0',
+      'Azure AD',
       'Docker',
       'Terraform',
       'Azure DevOps',
@@ -201,10 +205,6 @@ export const skillCategories: SkillCategory[] = [
       'GitLab CI',
       'CI/CD',
       'nginx',
-      'VPC',
-      'CloudFront',
-      'Route 53',
-      'Linux',
     ],
   },
   {
