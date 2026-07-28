@@ -147,6 +147,7 @@ export const skillCategories: SkillCategory[] = [
       'Three.js',
       'Micro-frontends',
       'Design Systems',
+      'Chart.js',
     ],
   },
   {
