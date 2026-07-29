@@ -150,6 +150,7 @@ export const skillCategories: SkillCategory[] = [
       'Chart.js',
       'Storybook',
       'Material UI',
+      'React Hook Form',
     ],
   },
   {
@@ -199,6 +200,7 @@ export const skillCategories: SkillCategory[] = [
     icon: 'Cloud',
     skills: [
       'AWS',
+      'AWS Secrets Manager',
       'Microsoft Azure',
       'Vercel',
       'Netlify',
