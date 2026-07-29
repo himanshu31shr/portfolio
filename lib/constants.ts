@@ -148,6 +148,8 @@ export const skillCategories: SkillCategory[] = [
       'Micro-frontends',
       'Design Systems',
       'Chart.js',
+      'Storybook',
+      'Material UI',
     ],
   },
   {
@@ -182,6 +184,9 @@ export const skillCategories: SkillCategory[] = [
       'Postman',
       'Sequelize',
       'Mobile APIs',
+      'Firebase Auth',
+      'RBAC',
+      'API Gateway',
     ],
   },
   {
