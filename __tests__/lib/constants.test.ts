@@ -116,8 +116,8 @@ describe('skillCategories', () => {
 })
 
 describe('resumeDownloads', () => {
-  it('has exactly 4 resume downloads', () => {
-    expect(resumeDownloads).toHaveLength(4)
+  it('has exactly 5 resume downloads', () => {
+    expect(resumeDownloads).toHaveLength(5)
   })
 
   it('each download has required fields', () => {

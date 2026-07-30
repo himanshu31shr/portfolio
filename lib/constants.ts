@@ -260,6 +260,11 @@ export const resumeDownloads: ResumeDownload[] = [
     isDefault: true,
   },
   {
+    roleLevel: 'senior_fullstack_engineer',
+    label: 'Senior Full Stack Engineer',
+    file: 'senior-full-stack-engineer.pdf',
+  },
+  {
     roleLevel: 'staff_engineer',
     label: 'Staff Engineer',
     file: 'staff-engineer.pdf',
