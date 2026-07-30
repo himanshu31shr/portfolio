@@ -141,6 +141,8 @@ export const skillCategories: SkillCategory[] = [
       'CSS Modules',
       'Redux',
       'Redux Toolkit',
+      'Apollo',
+      'Unidirectional data flows',
       'Electron',
       'PWA',
       'WebGL',
