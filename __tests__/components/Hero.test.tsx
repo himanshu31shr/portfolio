@@ -31,7 +31,7 @@ describe('Hero', () => {
     expect(downloadButton).toHaveAttribute('aria-expanded', 'false')
   })
 
-  it('opens resume menu with four role-level downloads', () => {
+  it('opens resume menu with five role-level downloads', () => {
     render(<Hero />)
     fireEvent.click(screen.getByRole('button', { name: /download resume — choose role level/i }))
     expect(screen.getByRole('menu')).toBeInTheDocument()
@@ -42,6 +42,9 @@ describe('Hero', () => {
       'href',
       '/resumes/senior-software-engineer.pdf'
     )
+    expect(
+      screen.getByRole('menuitem', { name: /download senior full stack engineer resume pdf/i })
+    ).toHaveAttribute('href', '/resumes/senior-full-stack-engineer.pdf')
     expect(screen.getByRole('menuitem', { name: /download staff engineer resume pdf/i })).toBeInTheDocument()
     expect(screen.getByRole('menuitem', { name: /download lead engineer resume pdf/i })).toBeInTheDocument()
   })
