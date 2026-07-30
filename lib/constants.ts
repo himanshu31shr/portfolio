@@ -133,6 +133,7 @@ export const skillCategories: SkillCategory[] = [
       'Angular',
       'Vite',
       'Webpack',
+      'Babel',
       'HTML5',
       'CSS3',
       'Tailwind CSS',
