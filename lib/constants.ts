@@ -169,6 +169,7 @@ export const skillCategories: SkillCategory[] = [
       'Playwright',
       'Mocha',
       'Stryker',
+      'axe',
     ],
   },
   {
@@ -205,6 +206,7 @@ export const skillCategories: SkillCategory[] = [
     icon: 'Cloud',
     skills: [
       'AWS',
+      'AWS IAM',
       'AWS Secrets Manager',
       'Microsoft Azure',
       'Vercel',
@@ -230,6 +232,7 @@ export const skillCategories: SkillCategory[] = [
     icon: 'Bot',
     skills: [
       'Claude Code',
+      'Anthropic Claude API',
       'Cursor',
       'GitHub Copilot',
       'ChatGPT',
